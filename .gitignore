@@ -1,0 +1,7 @@
+# Lokale tijdelijke bestanden
+*.tmp
+*.bak
+*.swp
+Thumbs.db
+Desktop.ini
+

@@ -51,7 +51,7 @@ Deze softwarestand vervangt geen fysieke test. Controleer apart of de noodthermo
 
 Beide ruimtes delen één aan/uit-helper en één temperatuursensor. De drie betrokken kranen kunnen niet op basis van een afzonderlijke Tussen-temperatuur worden geregeld.
 
-Er bestaat wel een afzonderlijke instelling **Nacht Keuken**, maar de actieve Tado-regeling gebruikt momenteel nog de algemene nachttemperatuur. Controleer bij toekomstig gebruik ook de naamafwijking tussen helper `nact_keuken` en de scriptverwijzing `nacht_keuken`.
+Er bestaat een afzonderlijke instelling **Nacht Keuken**. De actieve Tado-regeling gebruikt momenteel nog de algemene nachttemperatuur; oudere MQTT-scripts gebruiken wel de aparte keukenhelper. De geregistreerde entity-id is `input_number.nacht_keuken`.
 
 ### Gastenkamer heeft nog geen Tado
 

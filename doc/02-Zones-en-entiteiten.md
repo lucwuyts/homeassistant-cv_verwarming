@@ -34,17 +34,17 @@ Alle apparaten zijn Tado° Smart Radiator Thermostat X. De macro selecteert op d
 |---|---|---:|
 | `input_number.temp_wens_dag` | doeltemperatuur voor een ingeschakelde zone | 15–24 °C, stap 0,5 °C |
 | `input_number.temp_wens_nacht` | doeltemperatuur voor een uitgeschakelde zone | 14–22 °C, stap 0,5 °C |
-| `input_number.nact_keuken` (“Nacht Keuken”) | afzonderlijke nachttemperatuur voor Keuken en Tussen | 14–20 °C, stap 0,5 °C |
+| `input_number.nacht_keuken` (“Nacht Keuken”) | afzonderlijke nachttemperatuur voor Keuken en Tussen | 14–20 °C, stap 0,5 °C |
 | `Gastenkamer Nacht Temp` (“Gastenkamer Nacht Temp”) | voorziene nachttemperatuur voor de gastenkamer | 6–18 °C, stap 0,5 °C |
 | `input_datetime.begin_nacht` | tijdstip waarop alle zones naar nacht gaan | tijdwaarde |
 
-Bij de opname: dag 21,0 °C, algemene nacht 14,0 °C, Nacht Keuken 14,0 °C, Gastenkamer Nacht Temp 10,0 °C en begin nacht 22:00.
+Bij de opname van 13 november 2026: dag 21,0 °C, algemene nacht 17,0 °C, Nacht Keuken 17,0 °C, Gastenkamer Nacht Temp 10,0 °C en begin nacht 22:00.
 
 ### Afzonderlijke nachtinstelling voor Keuken
 
 In het instellingenscherm bestaat een aparte waarde **Nacht Keuken**. De oudere scripts `settempkeuken_nacht` en `settemptussen_nacht` zijn bedoeld om deze waarde naar Keuken en Tussen te sturen.
 
-In de huidige Tado-regeling gebruikt `script.cv_boost_zone_parameterized` voor een uitgeschakelde zone echter nog `input_number.temp_wens_nacht`. Daardoor gebruikt de actieve nieuwe regeling op dit moment de algemene nachttemperatuur en niet de afzonderlijke keukenwaarde. Bovendien heet de opgeslagen helper technisch `input_number.nact_keuken`, terwijl de oudere scripts verwijzen naar `input_number.nacht_keuken`. Dit onderdeel verdient controle wanneer de afzonderlijke keukeninstelling actief gebruikt moet worden.
+In de huidige Tado-regeling gebruikt `script.cv_boost_zone_parameterized` voor een uitgeschakelde zone nog `input_number.temp_wens_nacht`. De dynamische kraanregeling gebruikt dus de algemene nachttemperatuur. De oudere MQTT-scripts gebruiken wel `input_number.nacht_keuken`. In de interne UI-helperopslag heet de unieke sleutel `nact_keuken`, maar de geregistreerde entity-id is `input_number.nacht_keuken`; die entity-id staat ook als helper in het CV-package.
 
 ### Gastenkamer
 

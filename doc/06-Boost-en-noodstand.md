@@ -6,7 +6,7 @@ Deze werking is actief in Home Assistant sinds 23 augustus 2026.
 
 | Helper | Functie | Normale stand |
 |---|---|---|
-| `input_number.cv_boost_aanvoer_temp` | OpenTherm-aanvoertemperatuur tijdens boost | 65 °C |
+| `input_number.cv_boost_aanvoer_temp` | OpenTherm-aanvoertemperatuur tijdens boost | 60 °C bij de opname van 13 november 2026 |
 | `input_boolean.cv_ketelsturing_ha_actief` | bepaalt of Home Assistant setpoints naar de ketel mag sturen | aan |
 
 `input_boolean.cv_ketelsturing_ha_actief` is de noodschakelaar. Zet deze uit wanneer een gewone noodthermostaat de ketel moet overnemen. Home Assistant blijft dan wel de overige automatiseringen uitvoeren, maar `automation.cv_control_setpoint_dynamisch` stuurt geen nieuw `opentherm_gw.set_control_setpoint` meer naar de OTGW.
@@ -48,7 +48,7 @@ Gebruik deze controles na een wijziging of bij twijfel:
 7. controleer dat OTGW tijdens boost ongeveer dit toont:
 
 ```text
-Write-Data Control setpoint: 65.00
+   Write-Data Control setpoint: 60.00
 ```
 
 De software-noodstand vervangt geen fysieke test. Controleer apart of de noodthermostaat elektrisch en OpenTherm-technisch correct kan overnemen.

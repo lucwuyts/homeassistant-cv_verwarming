@@ -31,7 +31,7 @@ Voor iedere hoofd-zone wordt een doeltemperatuur gekozen:
 - zonehelper **aan** → `input_number.temp_wens_dag`;
 - zonehelper **uit** → `input_number.temp_wens_nacht`.
 
-Bij de opname waren deze waarden respectievelijk 21,0 °C en 14,0 °C. “Uit” betekent dus technisch niet noodzakelijk vorstvrij of volledig dicht: de zone wordt naar de nachttemperatuur geregeld.
+Bij de opname van 13 november 2026 waren deze waarden respectievelijk 21,0 °C en 17,0 °C. “Uit” betekent dus technisch niet noodzakelijk vorstvrij of volledig dicht: de zone wordt naar de nachttemperatuur geregeld.
 
 De temperatuurafwijking of `delta` is:
 

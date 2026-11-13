@@ -1,0 +1,17 @@
+{# /config/custom_templates/rt_tools.jinja #}
+
+{# haal alle devices op in een area en waarvan de naam begint met RT #}
+{% macro rt_climates_json(area_name, prefix='RT') -%} 
+  {%- set a = area_id(area_name) -%} 
+  {%- set ns = namespace(ids=[]) -%} 
+  {%- for e in area_entities(a) -%} 
+    {%- if e.startswith('climate.') -%} 
+      {%- set s = states[e] -%} 
+      {%- if s is not none and (s.name | trim | upper).startswith(prefix | upper) -%} 
+        {%- set ns.ids = ns.ids + [e] -%} 
+      {%- endif -%} 
+    {%- endif -%} 
+  {%- endfor -%} 
+  {{ ns.ids | tojson }} 
+
+{%- endmacro %}

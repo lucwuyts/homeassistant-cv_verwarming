@@ -1,0 +1,1048 @@
+# Centrale verwarmingsregeling. Zie doc/07-Beheer-en-synchronisatie.md voor de UI-helpermigratie.
+# Centrale verwarmingsregeling. Zie doc/07-Beheer-en-synchronisatie.md voor de UI-helpermigratie.
+input_boolean:
+  cv_bureel:
+    name: CV_Bureel
+    icon: mdi:fire-circle
+  cv_nic:
+    name: CV Gastenkamer
+    icon: mdi:fire-circle
+  cv_living_aan:
+    name: CV Living
+    icon: mdi:fire-circle
+  cv_keuken_en_tussen_aan:
+    name: CV Keuken en Tussen
+    icon: mdi:fire-circle
+  cv_nacht_bezig:
+    name: CV_Nacht_Bezig
+  cv_boost_bureel:
+    name: cv_boost_bureel
+    icon: mdi:speedometer
+  cv_boost_living:
+    name: cv_boost_living
+    icon: mdi:speedometer
+  cv_boost_keuken:
+    name: cv_boost_keuken
+    icon: mdi:speedometer
+  cv_ketelsturing_ha_actief:
+    name: cv_ketelsturing_ha_actief
+    icon: mdi:heating-coil
+  alle_cv_kranen_open_test:
+    name: Alle CV kranen open (Test)
+    icon: mdi:valve-open
+input_number:
+  temp_wens_dag:
+    name: Dag Temp
+    min: 15
+    max: 24
+    step: 0.5
+    mode: slider
+    icon: mdi:thermometer
+    unit_of_measurement: °C
+  temp_wens_nacht:
+    name: Nacht Temp
+    min: 14
+    max: 22
+    step: 0.5
+    mode: slider
+    icon: mdi:thermometer
+    unit_of_measurement: °C
+  cv_boost_aanvoer_temp:
+    name: cv_boost_aanvoer_temp
+    min: 45
+    max: 70
+    step: 1
+    mode: slider
+    icon: mdi:temperature-celsius
+    unit_of_measurement: °C
+  nacht_keuken:
+    name: Nacht Keuken
+    min: 14.0
+    max: 20.0
+    step: 0.5
+    mode: slider
+    icon: mdi:thermometer
+input_datetime:
+  begin_nacht:
+    name: Begin Nacht
+    has_date: false
+    has_time: true
+    icon: mdi:clock
+  cv_boost_einde_bureel:
+    name: cv_boost_einde_bureel
+    has_date: true
+    has_time: true
+    icon: mdi:delta
+  cv_boost_einde_living:
+    name: cv_boost_einde_living
+    has_date: true
+    has_time: true
+    icon: mdi:delta
+  cv_boost_einde_keuken:
+    name: cv_boost_einde_keuken
+    has_date: true
+    has_time: true
+    icon: mdi:delta
+counter:
+  cv_counter:
+    name: CV Counter
+    minimum: 0
+    maximum: 100
+    restore: true
+    initial: 0
+    step: 1
+automation:
+- id: '1612983793178'
+  alias: CV Uit op tijdstip
+  description: ''
+  trigger:
+  - platform: time
+    at: input_datetime.begin_nacht
+  condition: []
+  action:
+  - service: counter.reset
+    data: {}
+    target:
+      entity_id: counter.cv_counter
+  - service: input_boolean.turn_off
+    data: {}
+    target:
+      entity_id:
+      - input_boolean.cv_keuken_en_tussen_aan
+      - input_boolean.cv_living_aan
+      - input_boolean.cv_bureel
+      - input_boolean.cv_nic
+  - service: input_boolean.turn_on
+    data: {}
+    target:
+      entity_id: input_boolean.cv_nacht_bezig
+  mode: single
+- id: '1613123298154'
+  alias: Buiten Temp -> CV
+  description: Iedere minuut
+  triggers:
+  - minutes: /1
+    trigger: time_pattern
+  conditions: []
+  actions:
+  - action: opentherm_gw.set_outside_temperature
+    metadata: {}
+    data:
+      gateway_id: otgw
+      temperature: '{{ state_attr(''weather.wuytskes'', ''temperature'') | float(0)
+        }}'
+  mode: single
+- id: '1613558181388'
+  alias: Verstuur wijziging Dag Temp naar CV
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_number.temp_wens_dag
+  condition:
+  - condition: numeric_state
+    entity_id: counter.cv_counter
+    above: 0
+  action:
+  - service: mqtt.publish
+    data:
+      topic: homeassistant/cv/on
+      payload: '{{ states( ''input_number.temp_wens_dag'') | float }}'
+      retain: true
+  mode: single
+- id: '1613558181390'
+  alias: Verstuur wijziging Nacht Temp naar CV
+  description: Enkel wanneer CV in nacht stand
+  trigger:
+  - platform: state
+    entity_id:
+    - input_number.temp_wens_nacht
+  condition:
+  - condition: numeric_state
+    entity_id: counter.cv_counter
+    below: 1
+  action:
+  - service: mqtt.publish
+    data:
+      topic: homeassistant/cv/on
+      payload: '{{ states( ''input_number.temp_wens_nacht'') | float }}'
+      retain: true
+  mode: single
+- id: '1670082642361'
+  alias: 'CV: zones uitschakelen bij afwezigheid'
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.iedereen_afwezig
+    from:
+    - 'off'
+    to:
+    - 'on'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    trigger: state
+  conditions:
+  - condition: switch.is_off
+    target:
+      entity_id: input_boolean.l_m_blijvenaanwezig
+    options:
+      behavior: any
+      for: 00:00:00
+  actions:
+  - data: {}
+    target:
+      entity_id:
+      - input_boolean.cv_bureel
+      - input_boolean.cv_living_aan
+      - input_boolean.cv_keuken_en_tussen_aan
+    action: input_boolean.turn_off
+  mode: single
+- id: '1671716447190'
+  alias: CV  NachtBezig helper uitzetten op tijdstip ochtend
+  description: ''
+  trigger:
+  - platform: time
+    at: 07:00:00
+  condition: []
+  action:
+  - service: input_boolean.turn_off
+    data: {}
+    target:
+      entity_id: input_boolean.cv_nacht_bezig
+  mode: single
+- id: '1671716797761'
+  alias: CV sNachts uit na 1H
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: counter.cv_counter
+    for:
+      hours: 1
+      minutes: 0
+      seconds: 0
+    above: 0
+  condition:
+  - condition: state
+    entity_id: input_boolean.cv_nacht_bezig
+    state: 'on'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+  action:
+  - service: counter.reset
+    data: {}
+    target:
+      entity_id: counter.cv_counter
+  - service: input_boolean.turn_off
+    data: {}
+    target:
+      entity_id:
+      - input_boolean.cv_keuken_en_tussen_aan
+      - input_boolean.cv_living_aan
+      - input_boolean.cv_bureel
+      - input_boolean.cv_nic
+  mode: single
+- id: '1709214333720'
+  alias: CV: eenmalige ochtendstart
+  description: ''
+  triggers:
+  - at: 06:00:00
+    trigger: time
+  conditions: []
+  actions:
+  - target:
+      entity_id:
+      - input_boolean.cv_nacht_bezig
+    data: {}
+    action: input_boolean.turn_off
+  - metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - input_boolean.cv_living_aan
+      - input_boolean.cv_keuken_en_tussen_aan
+    action: input_boolean.turn_on
+  - metadata: {}
+    data:
+      stop_actions: true
+    target:
+      entity_id: automation.cv_eenmalige_ochtendstart
+    action: automation.turn_off
+  mode: single
+- id: '1768464947908'
+  alias: 'Herstart  OTGW '
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    hours: /1
+    minutes: '00'
+  conditions: []
+  actions:
+  - sequence:
+    - type: turn_off
+      device_id: 97f1e4c4bc3cfa4df41f4cfef3dc0153
+      entity_id: 9ab96eb81e64d055d247e8402f790219
+      domain: switch
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 59
+        milliseconds: 0
+    - type: turn_on
+      device_id: 97f1e4c4bc3cfa4df41f4cfef3dc0153
+      entity_id: 9ab96eb81e64d055d247e8402f790219
+      domain: switch
+  mode: single
+- id: '1769860300484'
+  alias: Status CV - Alle ruimtes (script)
+  description: Stel de thermostatische kranen in.  Alle zones
+  triggers:
+  - trigger: time_pattern
+    minutes: /1
+  conditions: []
+  actions:
+  - action: script.cv_boost_zone_parameterized
+    data:
+      zone: Bureel
+      temp_sensor: sensor.cv_bureel_temperatuur_stabiel
+      cv_uit: '{{ is_state(''input_boolean.cv_bureel'',''off'') | bool }}'
+  - action: script.cv_boost_zone_parameterized
+    data:
+      zone: Living
+      temp_sensor: sensor.cv_living_temperatuur_stabiel
+      cv_uit: '{{ is_state(''input_boolean.cv_living_aan'',''off'') | bool }}'
+  - action: script.cv_boost_zone_parameterized
+    data:
+      zone: Tussen
+      temp_sensor: sensor.cv_keuken_temperatuur_stabiel
+      cv_uit: '{{ is_state(''input_boolean.cv_keuken_en_tussen_aan'',''off'') | bool
+        }}'
+  - action: script.cv_boost_zone_parameterized
+    data:
+      zone: Keuken
+      temp_sensor: sensor.cv_keuken_temperatuur_stabiel
+      cv_uit: '{{ is_state(''input_boolean.cv_keuken_en_tussen_aan'',''off'') | bool
+        }}'
+      hoge_prioriteit: true
+  mode: single
+- id: '1771337121032'
+  alias: Stop boost bureel bij uitschakelen
+  description: ''
+  triggers:
+  - entity_id: input_boolean.cv_bureel
+    to: 'off'
+    trigger: state
+  actions:
+  - target:
+      entity_id: input_boolean.cv_boost_bureel
+    action: input_boolean.turn_off
+  mode: single
+- id: '1771337144258'
+  alias: Stop boost living bij uitschakelen
+  description: ''
+  triggers:
+  - entity_id: input_boolean.cv_living_aan
+    to: 'off'
+    trigger: state
+  actions:
+  - target:
+      entity_id: input_boolean.cv_boost_living
+    action: input_boolean.turn_off
+- id: '1771337166355'
+  alias: Stop boost keuken bij uitschakelen
+  description: ''
+  triggers:
+  - entity_id: input_boolean.cv_keuken_en_tussen_aan
+    to: 'off'
+    trigger: state
+  actions:
+  - target:
+      entity_id: input_boolean.cv_boost_keuken
+    action: input_boolean.turn_off
+- id: '1771589685043'
+  alias: CV Boost Auto Stop
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    minutes: /1
+  conditions: []
+  actions:
+  - variables:
+      dag: '{{ states(''input_number.temp_wens_dag'') | float }}'
+      nacht: '{{ states(''input_number.temp_wens_nacht'') | float }}'
+      wens_bureel: '{{ dag if is_state(''input_boolean.cv_bureel'',''on'') else nacht
+        }}'
+      delta_bureel: '{{ wens_bureel - (states(''sensor.cv_bureel_temperatuur_stabiel'')
+        | float(0)) }}'
+      wens_living: '{{ dag if is_state(''input_boolean.cv_living_aan'',''on'') else
+        nacht }}'
+      delta_living: '{{ wens_living - (states(''sensor.cv_living_temperatuur_stabiel'')
+        | float(0)) }}'
+      wens_keuken: '{{ dag if is_state(''input_boolean.cv_keuken_en_tussen_aan'',''on'')
+        else nacht }}'
+      delta_keuken: '{{ wens_keuken - (states(''sensor.cv_keuken_temperatuur_stabiel'')
+        | float(0)) }}'
+      max_delta: '{{ [delta_bureel, delta_living, delta_keuken] | max }}'
+  - if:
+    - condition: template
+      value_template: '{{ max_delta < 0.5 }}'
+    then:
+    - target:
+        entity_id:
+        - input_boolean.cv_boost_bureel
+        - input_boolean.cv_boost_living
+        - input_boolean.cv_boost_keuken
+      action: input_boolean.turn_off
+  mode: single
+- id: '1772103141610'
+  alias: CV Control Setpoint Dynamisch
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    minutes: /2
+  actions:
+  - variables:
+      ha_ketelsturing_actief: '{{ is_state(''input_boolean.cv_ketelsturing_ha_actief'',
+        ''on'') }}'
+      boost_active: '{{ is_state(''input_boolean.cv_boost_bureel'', ''on'') or is_state(''input_boolean.cv_boost_living'',
+        ''on'') or is_state(''input_boolean.cv_boost_keuken'', ''on'') }}'
+      boost_setpoint: '{{ states(''input_number.cv_boost_aanvoer_temp'') | float(65)
+        }}'
+      dag: '{{ states(''input_number.temp_wens_dag'') | float }}'
+      nacht: '{{ states(''input_number.temp_wens_nacht'') | float }}'
+      wens_bureel: '{{ dag if is_state(''input_boolean.cv_bureel'',''on'') else nacht
+        }}'
+      delta_bureel: '{{ wens_bureel - (states(''sensor.cv_bureel_temperatuur_stabiel'')
+        | float(0)) }}'
+      wens_living: '{{ dag if is_state(''input_boolean.cv_living_aan'',''on'') else
+        nacht }}'
+      delta_living: '{{ wens_living - (states(''sensor.cv_living_temperatuur_stabiel'')
+        | float(0)) }}'
+      wens_keuken: '{{ dag if is_state(''input_boolean.cv_keuken_en_tussen_aan'',''on'')
+        else nacht }}'
+      delta_keuken: '{{ wens_keuken - (states(''sensor.cv_keuken_temperatuur_stabiel'')
+        | float(0)) }}'
+      max_delta: '{{ [delta_bureel, delta_living, delta_keuken ] | max }}'
+      control_setpoint: "{% if boost_active | bool %}\n  {{ boost_setpoint }}\n{%
+        elif max_delta <= 0 %}\n  20\n{% elif max_delta > 2 %}\n  60\n{% elif max_delta
+        > 1 %}\n  55\n{% elif max_delta > 0.5 %}\n  48\n{% else %}\n  42\n{% endif
+        %}\n"
+  - condition: template
+    value_template: '{{ ha_ketelsturing_actief | bool }}'
+  - action: logbook.log
+    data:
+      name: CV Controller
+      message: 'Warmtevraag: {{ max_delta }}, boost: {{ boost_active }}, setpoint:
+        {{ control_setpoint }}, CH enable: {{ ''true'' if max_delta > 0 or boost_active
+        | bool else ''false'' }}
+
+        '
+  - action: opentherm_gw.set_control_setpoint
+    data:
+      gateway_id: otgw
+      temperature: '{{ control_setpoint | float }}'
+  mode: single
+- id: '1772527831848'
+  alias: (TEST) Alle CV kranen open
+  description: Zet alle slimme radiatorkranen volledig open voor onderhoud
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_boolean.alle_cv_kranen_open_test
+    to:
+  actions:
+  - variables:
+      wens: '{{ 30 if is_state(''input_boolean.alle_cv_kranen_open_test'', ''on'')
+        else states(''input_number.temp_wens_nacht'') | float }}
+
+        '
+      climates_keuken: '{% from ''rt_tools.jinja'' import rt_climates_json with context
+        %} {{ rt_climates_json(''Keuken'') | from_json }}
+
+        '
+      climates_tussen: '{% from ''rt_tools.jinja'' import rt_climates_json with context
+        %} {{ rt_climates_json(''Tussen'') | from_json }}
+
+        '
+      climates_living: '{% from ''rt_tools.jinja'' import rt_climates_json with context
+        %} {{ rt_climates_json(''Living'') | from_json }}
+
+        '
+      climates_bureel: '{% from ''rt_tools.jinja'' import rt_climates_json with context
+        %} {{ rt_climates_json(''Bureel'') | from_json }}
+
+        '
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.alle_cv_kranen_open_test
+        state: 'on'
+      sequence:
+      - target:
+          entity_id: automation.status_cv
+        data:
+          stop_actions: false
+        action: automation.turn_off
+    default:
+    - target:
+        entity_id: automation.status_cv
+      action: automation.turn_on
+  - repeat:
+      for_each: '{{ climates_keuken }}'
+      sequence:
+      - target:
+          entity_id: '{{ repeat.item }}'
+        data:
+          temperature: '{{ wens }}'
+        action: climate.set_temperature
+  - repeat:
+      for_each: '{{ climates_tussen }}'
+      sequence:
+      - target:
+          entity_id: '{{ repeat.item }}'
+        data:
+          temperature: '{{ wens }}'
+        action: climate.set_temperature
+  - repeat:
+      for_each: '{{ climates_living }}'
+      sequence:
+      - target:
+          entity_id: '{{ repeat.item }}'
+        data:
+          temperature: '{{ wens }}'
+        action: climate.set_temperature
+  - repeat:
+      for_each: '{{ climates_bureel }}'
+      sequence:
+      - target:
+          entity_id: '{{ repeat.item }}'
+        data:
+          temperature: '{{ wens }}'
+        action: climate.set_temperature
+  mode: single
+- id: '1787489771583'
+  alias: Nest-Off
+  description: ''
+  triggers:
+  - trigger: climate.turned_off
+    target:
+      entity_id: climate.living_nest_living
+    options:
+      behavior: each
+      for:
+        hours: 0
+        minutes: 2
+        seconds: 0
+  conditions: []
+  actions:
+  - action: input_boolean.turn_off
+    metadata: {}
+    target:
+      entity_id: input_boolean.cv_living_aan
+    data: {}
+  mode: single
+- id: '1787489884879'
+  alias: Nest-On
+  description: ''
+  triggers:
+  - trigger: climate.turned_on
+    target:
+      entity_id: climate.living_nest_living
+    options:
+      behavior: each
+      for:
+        hours: 0
+        minutes: 2
+        seconds: 0
+  conditions: []
+  actions:
+  - action: input_boolean.turn_on
+    metadata: {}
+    target:
+      entity_id: input_boolean.cv_living_aan
+    data: {}
+  mode: single
+- id: '1787490299388'
+  alias: ' Nest wens temperatuur overnemen voor CV'
+  description: 'Neem de doeltemperatuur van de Nest over naar temp_wens_dag wanneer
+    deze minstens 1 minuut ongewijzigd blijft. Bij een temperatuur lager dan 19°C
+    wordt de Nest uitgeschakeld.
+
+    '
+  triggers:
+  - trigger: state
+    entity_id: climate.living_nest_living
+    attribute: temperature
+    for:
+      minutes: 1
+  conditions:
+  - condition: template
+    value_template: '{{ state_attr(''climate.living_nest_living'', ''temperature'')
+      is not none }}
+
+      '
+  actions:
+  - variables:
+      nest_temp: '{{ state_attr(''climate.living_nest_living'', ''temperature'') |
+        float }}
+
+        '
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ nest_temp < 19 }}'
+      sequence:
+      - action: climate.turn_off
+        target:
+          entity_id: climate.living_nest_living
+    - conditions:
+      - condition: template
+        value_template: '{{ nest_temp >= 19 }}'
+      sequence:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.temp_wens_dag
+        data:
+          value: '{{ nest_temp }}'
+  mode: restart
+- id: '1791713214086'
+  alias: CV Living koppelen aan Nest Thermostaat met Helper
+  description: Stuurt de Nest aan op basis van de schakelaar en de gewenste 
+    dagtemperatuur
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.cv_living_aan
+  - trigger: state
+    entity_id: input_number.temp_wens_dag
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.cv_living_aan
+        state: 'on'
+      sequence:
+      - action: climate.turn_on
+        metadata: {}
+        target:
+          entity_id: climate.living_nest_living
+        data: {}
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 30
+          milliseconds: 0
+      - action: climate.set_temperature
+        target:
+          device_id: 55c1d0be54ea62336f56648646771842
+        data:
+          temperature: '{{ states(''input_number.temp_wens_dag'') | float }}'
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.cv_living_aan
+        state: 'off'
+      sequence:
+      - action: climate.turn_off
+        metadata: {}
+        target:
+          entity_id: climate.living_nest_living
+        data: {}
+  mode: single
+script:
+  cv_boost_zone_parameterized:
+    alias: CV boost zone (parameterized)
+    description: Stel de Tado kranen in met dynamische bias-compensatie
+    mode: single
+    fields:
+      zone:
+        name: Zone
+        required: true
+        selector:
+          text: {}
+      cv_uit:
+        name: CV uit
+        required: true
+        selector:
+          boolean: {}
+      huidige_temp:
+        name: Huidige temperatuur (optioneel)
+        required: false
+        selector:
+          number:
+            min: -20
+            max: 50
+            step: 0.1
+            mode: box
+      temp_sensor:
+        name: Temperatuursensor (optioneel)
+        required: false
+        selector:
+          entity:
+            domain: sensor
+      hoge_prioriteit:
+        name: Hoge Prioriteit (optioneel)
+        required: false
+        selector:
+          boolean: {}
+    sequence:
+    - variables:
+        nacht: '{{ cv_uit }}'
+        rt_list: '{% from ''rt_tools.jinja'' import rt_climates_json with context
+          %} {{ rt_climates_json(zone) | from_json }}
+
+          '
+        basis: "{{ states('input_number.temp_wens_nacht') | float(17)\n   if nacht
+          else\n   states('input_number.temp_wens_dag') | float(20) }}\n"
+        huidige_temp_resolved: "{% if huidige_temp is defined and huidige_temp is
+          not none %}\n  {{ huidige_temp | float }}\n{% elif temp_sensor is defined
+          and temp_sensor %}\n  {{ states(temp_sensor) | float(0) }}\n{% else %}\n\
+          \  0\n{% endif %}\n"
+        delta: '{{ (basis - huidige_temp_resolved) | round(2) }}
+
+          '
+        boost_active: '{% set boost_zone = ''keuken'' if zone | lower == ''tussen''
+          else zone | lower %}
+
+          {{ is_state(''input_boolean.cv_boost_'' ~ boost_zone, ''on'') }}
+
+          '
+    - repeat:
+        for_each: '{{ rt_list }}'
+        sequence:
+        - variables:
+            rt_entity: '{{ repeat.item }}'
+            kraan_temp: '{{ state_attr(rt_entity, ''current_temperature'') | float(0)
+              }}
+
+              '
+            bias_raw: '{{ (kraan_temp - huidige_temp_resolved) }}
+
+              '
+            bias: "{% if bias_raw > 2 %}\n  2\n{% elif bias_raw < 0 %}\n  0\n{% else
+              %}\n  {{ bias_raw }}\n{% endif %}\n"
+            huidig_setpoint: '{{ state_attr(rt_entity, ''temperature'') | float(0)
+              }}
+
+              '
+            berekend_setpoint: "{% set prioriteit = hoge_prioriteit | default(false)
+              | bool %}\n{% if boost_active %}\n  30\n{% elif prioriteit and delta
+              > 0 %}\n  30\n{% elif delta <= 0 %}\n  {{ basis }}\n{% else %}\n  {{
+              (basis\n     + (delta * 1.6)\n     + (bias * 0.6)) | round(1) }}\n{%
+              endif %}\n"
+            new_setpoint: "{% if (berekend_setpoint - huidig_setpoint) | abs < 0.2
+              %}\n  {{ huidig_setpoint }}\n{% else %}\n  {{ berekend_setpoint }}\n\
+              {% endif %}\n"
+        - target:
+            entity_id: input_number.debug_setpoint_{{zone | lower }}
+          data:
+            value: '{{ new_setpoint }}'
+          action: input_number.set_value
+        - target:
+            entity_id: '{{ rt_entity }}'
+          data:
+            temperature: '{{ new_setpoint }}'
+          action: climate.set_temperature
+  cv_boost_zone_slim:
+    alias: CV boost zone (slim)
+    mode: restart
+    fields:
+      zone:
+        required: true
+        selector:
+          text: {}
+      cv_uit:
+        required: true
+        selector:
+          boolean: {}
+      temp_sensor:
+        required: true
+        selector:
+          entity:
+            domain: sensor
+    sequence:
+    - variables:
+        zone_boolean: "{% if zone == \"Bureel\" %}\n  input_boolean.cv_bureel\n{%
+          elif zone == \"Living\" %}\n  input_boolean.cv_living_aan\n{% elif zone
+          == \"Keuken\" %}\n  input_boolean.cv_keuken_en_tussen_aan\n{% endif %}\n"
+    - target:
+        entity_id: 'input_datetime.cv_boost_einde_{{ zone | lower }}
+
+          '
+      data:
+        datetime: '{{ (now() + timedelta(minutes=60)).strftime(''%Y-%m-%d %H:%M:%S'')
+          }}
+
+          '
+      action: input_datetime.set_datetime
+    - target:
+        entity_id: '{{ zone_boolean }}
+
+          '
+      action: input_boolean.turn_on
+    - target:
+        entity_id: 'input_boolean.cv_boost_{{ zone | lower }}
+
+          '
+      action: input_boolean.turn_on
+    - repeat:
+        count: 60
+        sequence:
+        - variables:
+            target_temp: '{{ states(''input_number.temp_wens_dag'') | float }}
+
+              '
+            huidige_temp: '{{ states(temp_sensor) | float(0) }}
+
+              '
+            delta: '{{ target_temp - huidige_temp }}
+
+              '
+        - if:
+          - condition: template
+            value_template: '{{ delta <= 0.2 }}'
+          then:
+          - target:
+              entity_id: 'input_boolean.cv_boost_{{ zone | lower }}
+
+                '
+            action: input_boolean.turn_off
+          - stop: Temperatuur bereikt
+        - if:
+          - condition: template
+            value_template: '{{ cv_uit }}'
+          then:
+          - target:
+              entity_id: 'input_boolean.cv_boost_{{ zone | lower }}
+
+                '
+            action: input_boolean.turn_off
+          - stop: Zone uitgeschakeld
+        - delay: 00:01:00
+    - target:
+        entity_id: 'input_boolean.cv_boost_{{ zone | lower }}
+
+          '
+      action: input_boolean.turn_off
+    description: ''
+  settempbureel_dag:
+    alias: DAG  SetTempBureel
+    mode: single
+    icon: mdi:temperature-celsius
+    sequence:
+    - repeat:
+        for_each: '{{ area_entities(''bureel'')  }}'
+        sequence:
+        - if:
+          - condition: template
+            value_template: '{{ ''settopic'' in repeat.item }}'
+          then:
+          - service: mqtt.publish
+            data:
+              topic: '{{ states(repeat.item) | replace(''set'' , ''ruimte'') }} '
+              payload: bureel
+          - service: mqtt.publish
+            data:
+              topic: '{{ states(repeat.item) }}'
+              payload: '{{ states(''input_number.temp_wens_dag'') }}'
+  settempbureel_nacht:
+    alias: NACHT SetTempBureel
+    sequence:
+    - repeat:
+        for_each: '{{ area_entities(''bureel'')  }}'
+        sequence:
+        - if:
+          - condition: template
+            value_template: '{{ ''settopic'' in repeat.item }}'
+          then:
+          - service: mqtt.publish
+            data:
+              topic: '{{ states(repeat.item) }}'
+              payload: '{{ states(''input_number.temp_wens_nacht'') }}'
+    mode: single
+    icon: mdi:temperature-celsius
+  settempkeuken_dag:
+    alias: DAG SetTempKeuken
+    sequence:
+    - repeat:
+        for_each: '{{ area_entities(''keuken'')  }}'
+        sequence:
+        - if:
+          - condition: template
+            value_template: '{{ ''settopic'' in repeat.item }}'
+          then:
+          - service: mqtt.publish
+            data:
+              topic: '{{ states(repeat.item) | replace(''set'' , ''ruimte'') }} '
+              payload: keuken
+          - service: mqtt.publish
+            data:
+              topic: '{{ states(repeat.item) }}'
+              payload: '{{ states(''input_number.temp_wens_dag'') }}'
+    mode: single
+    icon: mdi:temperature-celsius
+  settempkeuken_nacht:
+    alias: NACHT SetTempKeuken
+    sequence:
+    - repeat:
+        for_each: '{{ area_entities(''keuken'')  }}'
+        sequence:
+        - if:
+          - condition: template
+            value_template: '{{ ''settopic'' in repeat.item }}'
+          then:
+          - service: mqtt.publish
+            data:
+              topic: '{{ states(repeat.item) }}'
+              payload: '{{ states(''input_number.nacht_keuken'') }}'
+    mode: single
+    icon: mdi:temperature-celsius
+  settemptussen_dag:
+    alias: DAG SetTempTussen
+    sequence:
+    - repeat:
+        for_each: '{{ area_entities(''tussen'')  }}'
+        sequence:
+        - if:
+          - condition: template
+            value_template: '{{ ''settopic'' in repeat.item }}'
+          then:
+          - service: mqtt.publish
+            data:
+              topic: '{{ states(repeat.item) | replace(''set'' , ''ruimte'') }} '
+              payload: tussen
+          - service: mqtt.publish
+            data:
+              topic: '{{ states(repeat.item) }}'
+              payload: '{{ states(''input_number.temp_wens_dag'') }}'
+    mode: single
+    icon: mdi:temperature-celsius
+  settemptussen_nacht:
+    alias: NACHT SetTempTussen
+    sequence:
+    - repeat:
+        for_each: '{{ area_entities(''tussen'')  }}'
+        sequence:
+        - if:
+          - condition: template
+            value_template: '{{ ''settopic'' in repeat.item }}'
+          then:
+          - service: mqtt.publish
+            data:
+              topic: '{{ states(repeat.item) }}'
+              payload: '{{ states(''input_number.nacht_keuken'') }}'
+    mode: single
+    icon: mdi:temperature-celsius
+template:
+- trigger:
+  - platform: state
+    entity_id: sensor.atc_d897_temperature
+  sensor:
+  - name: CV Bureel Temperatuur Stabiel
+    unique_id: cv_bureel_temperatuur_stabiel
+    unit_of_measurement: °C
+    device_class: temperature
+    state: "{% set waarde = trigger.to_state.state %} {% if waarde | is_number %}\n\
+      \  {{ waarde | float | round(1) }}\n{% else %}\n  {{ this.state if this.state
+      | is_number else none }}\n{% endif %}\n"
+- trigger:
+  - platform: state
+    entity_id: sensor.living_nest_living_temperatuur
+  sensor:
+  - name: CV Living Temperatuur Stabiel
+    unique_id: cv_living_temperatuur_stabiel
+    unit_of_measurement: °C
+    device_class: temperature
+    state: "{% set waarde = trigger.to_state.state %} {% if waarde | is_number %}\n\
+      \  {{ waarde | float | round(1) }}\n{% else %}\n  {{ this.state if this.state
+      | is_number else none }}\n{% endif %}\n"
+- trigger:
+  - platform: state
+    entity_id: sensor.keuken_thermometer_bt_temperature
+  sensor:
+  - name: CV Keuken Temperatuur Stabiel
+    unique_id: cv_keuken_temperatuur_stabiel
+    unit_of_measurement: °C
+    device_class: temperature
+    state: "{% set waarde = trigger.to_state.state %} {% if waarde | is_number %}\n\
+      \  {{ waarde | float | round(1) }}\n{% else %}\n  {{ this.state if this.state
+      | is_number else none }}\n{% endif %}\n"
+- switch:
+  - name: Verwarming dummy
+    unique_id: verwarming_dummy
+    state: "{{ is_state('input_boolean.cv_living_aan','on')\n   or is_state('input_boolean.cv_bureel','on')\n\
+      \   or is_state('input_boolean.cv_keuken_en_tussen_aan','on') }}\n"
+    turn_on:
+    - service: input_boolean.turn_on
+      target:
+        entity_id:
+        - input_boolean.cv_living_aan
+        - input_boolean.cv_bureel
+        - input_boolean.cv_keuken_en_tussen_aan
+    turn_off:
+    - service: input_boolean.turn_off
+      target:
+        entity_id:
+        - input_boolean.cv_living_aan
+        - input_boolean.cv_bureel
+        - input_boolean.cv_keuken_en_tussen_aan
+- sensor:
+  - name: Gemiddelde actieve zones
+    unique_id: gemiddelde_actieve_zones
+    unit_of_measurement: °C
+    state: "{% set temps = [] %}\n{% if is_state('input_boolean.cv_bureel','on') %}\n\
+      \  {% set temps = temps + [states('sensor.cv_bureel_temperatuur_stabiel')|float(0)]
+      %}\n{% endif %}\n{% if is_state('input_boolean.cv_living_aan','on') %}\n  {%
+      set temps = temps + [states('sensor.cv_living_temperatuur_stabiel')|float(0)]
+      %}\n{% endif %}\n{% if is_state('input_boolean.cv_keuken_en_tussen_aan','on')
+      %}\n  {% set temps = temps + [states('sensor.cv_keuken_temperatuur_stabiel')|float(0)]
+      %}\n{% endif %}\n{% if temps | length > 0 %}\n  {{ (temps | sum / temps | length)
+      | round(1) }}\n{% else %}\n  {{ states('sensor.cv_living_temperatuur_stabiel')
+      | float(0) }}\n{% endif %}\n"
+- sensor:
+  - name: CV Debug Status
+    state: '{% set dag = states(''input_number.temp_wens_dag'') | float %} {% set
+      nacht = states(''input_number.temp_wens_nacht'') | float %}
+
+      {% set wens_bureel = dag if is_state(''input_boolean.cv_bureel'',''on'') else
+      nacht %} {% set delta_bureel = wens_bureel - (states(''sensor.cv_bureel_temperatuur_stabiel'')
+      | float(0)) %}
+
+      {% set wens_living = dag if is_state(''input_boolean.cv_living_aan'',''on'')
+      else nacht %} {% set delta_living = wens_living - (states(''sensor.cv_living_temperatuur_stabiel'')
+      | float(0)) %}
+
+      {% set wens_keuken = dag if is_state(''input_boolean.cv_keuken_en_tussen_aan'',''on'')
+      else nacht %} {% set delta_keuken = wens_keuken - (states(''sensor.cv_keuken_temperatuur_stabiel'')
+      | float(0)) %}
+
+      {% set max_delta = [delta_bureel, delta_living, delta_keuken] | max %}
+
+      MaxΔ={{ max_delta | round(2) }}
+
+      '
+    attributes:
+      bureel_delta: "{{ (states('input_number.temp_wens_dag') | float\n    - states('sensor.cv_bureel_temperatuur_stabiel')
+        | float(0)) | round(2) }}\n"
+      living_delta: "{{ (states('input_number.temp_wens_dag') | float\n    - states('sensor.cv_living_temperatuur_stabiel')
+        | float(0)) | round(2) }}\n"
+      keuken_delta: "{{ (states('input_number.temp_wens_dag') | float\n    - states('sensor.cv_keuken_temperatuur_stabiel')
+        | float(0)) | round(2) }}\n"
+- sensor:
+  - name: Tado Bureel Deur Setpoint
+    unique_id: tado_bureel_deur_setpoint
+    unit_of_measurement: °C
+    state: '{{ state_attr(''climate.smart_radiator_thermostat_x_3'', ''temperature'')
+      | float(0) }}
+
+      '
+- sensor:
+  - name: Tado Bureel Venster Setpoint
+    unique_id: tado_bureel_venster_setpoint
+    unit_of_measurement: °C
+    state: '{{ state_attr(''climate.smart_radiator_thermostat_x_4'', ''temperature'')
+      | float(0) }}
+
+      '

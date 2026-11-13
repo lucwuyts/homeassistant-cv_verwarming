@@ -2,7 +2,7 @@
 
 ## Onderzochte configuratie
 
-De documentatie is samengesteld uit de volgende read-only bronnen op `\\homeassistant\config`:
+De documentatie is samengesteld uit de volgende bronnen op `\\homeassistant\config`. De actuele CV-configuratie is geïsoleerd in `packages/cv_heating.yaml`; alleen de benodigde macro staat aanvullend in `custom_templates/rt_tools.jinja`.
 
 | Bron | Relevante inhoud |
 |---|---|
@@ -13,23 +13,15 @@ De documentatie is samengesteld uit de volgende read-only bronnen op `\\homeassi
 | `templates/cv.yaml` | gezamenlijke verwarmingsschakelaar en gemiddelde actieve zones |
 | `templates/debug.yaml` | CV-deltadiagnose |
 | `templates/tado.yaml` | twee Tado-setpointsensoren |
-| `.storage/lovelace.lovelace` | dashboardknoppen, kleuren, enkele-tikactie en dubbele-tikactie voor boost |
-| `.storage/input_number` | grenzen en namen van temperatuurhelpers |
-| `.storage/input_boolean` | zone-, boost- en onderhoudshelpers |
-| `.storage/input_datetime` | begin nacht en boost-eindtijden |
-| `.storage/counter` | CV Counter-definitie |
-| `.storage/core.entity_registry` | entiteitsnamen en apparaatkoppelingen |
-| `.storage/core.device_registry` | Tado-apparaatnamen en ruimtes |
-| `.storage/core.area_registry` | Home Assistant-ruimtes |
-| `.storage/core.restore_state` | laatst herstelde waarden en automatiseringsstatus bij de opname |
+| `.storage/*` (read-only onderzocht) | Lovelace-dashboard, UI-helperdefinities, registries en herstelde waarden; niet opgenomen in Git |
 
 ## Afbakening
 
-- Er is niets gewijzigd in `\\homeassistant\config`.
+- De CV-inventarisatie van 13 november 2026 las uit `\\homeassistant\config`. Er is niets naar HA gepubliceerd.
 - Geheimen en persoonsgegevens uit de configuratie zijn niet in deze documentatie opgenomen.
 - De grote historie-database is niet nodig geweest voor het beschrijven van de statische werking.
 - `packages/boiler_controller` gaat over een elektrische warmwaterboiler en is bewust niet als centrale verwarming beschreven.
-- Status- en instelwaarden zijn een momentopname van 12 augustus 2026; de logica is gebaseerd op de configuratie zoals die toen aanwezig was.
+- Status- en instelwaarden in deze documenten zijn momentopnamen; de CV-logica staat in het package. Niet-CV-configuratie is niet in deze repository opgenomen.
 
 ## Betrouwbaarheidsnotitie
 

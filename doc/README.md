@@ -1,6 +1,6 @@
 # Documentatie centrale verwarming
 
-Deze map beschrijft hoe de centrale verwarming in Home Assistant is opgebouwd en bestuurd. De analyse is gebaseerd op een **read-only** opname van `\\homeassistant\config` op 12 augustus 2026.
+Deze repository houdt alleen de centrale verwarmingssturing apart bij in [`../packages/cv_heating.yaml`](../packages/cv_heating.yaml), met de benodigde kraanmacro in [`../custom_templates/rt_tools.jinja`](../custom_templates/rt_tools.jinja). Andere Home Assistant-configuratie, zoals MQTT, staat niet in deze repository en wordt niet door de synchronisatiescripts aangeraakt.
 
 ## Documenten
 
@@ -10,6 +10,7 @@ Deze map beschrijft hoe de centrale verwarming in Home Assistant is opgebouwd en
 - [04-Diagnose-en-aandachtspunten.md](04-Diagnose-en-aandachtspunten.md) — controlepunten, foutzoeken en belangrijke observaties.
 - [05-Bronnen.md](05-Bronnen.md) — herkomst van de beschreven logica.
 - [06-Boost-en-noodstand.md](06-Boost-en-noodstand.md) — actieve boostwerking en noodschakelaar voor HA-ketelsturing.
+- [07-Beheer-en-synchronisatie.md](07-Beheer-en-synchronisatie.md) — configuratie bijwerken, publiceren en omgaan met helpers.
 
 ## Samenvatting
 
@@ -22,8 +23,8 @@ Huidige relevante instellingen bij de opname:
 | Instelling | Waarde |
 |---|---:|
 | Dagtemperatuur | 21,0 °C |
-| Nachttemperatuur | 14,0 °C |
-| Nacht Keuken | 14,0 °C |
+| Nachttemperatuur | 17,0 °C |
+| Nacht Keuken | 17,0 °C |
 | Gastenkamer Nacht Temp (gastenkamer; nog te herbekijken) | 10,0 °C |
 | Begin nacht | 22:00 |
 
