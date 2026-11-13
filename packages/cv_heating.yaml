@@ -55,6 +55,39 @@ input_number:
     mode: slider
     icon: mdi:temperature-celsius
     unit_of_measurement: °C
+  cv_aanvoer_setpoint:
+    name: CV aanvoer stapsgewijs
+    min: 0
+    max: 60
+    step: 2
+    initial: 0
+    mode: slider
+    icon: mdi:thermometer-chevron-up
+    unit_of_measurement: °C
+  cv_ramp_ref_bureel:
+    name: CV ramp referentie Bureel
+    min: 0
+    max: 40
+    step: 0.1
+    initial: 0
+    mode: box
+    unit_of_measurement: °C
+  cv_ramp_ref_living:
+    name: CV ramp referentie Living
+    min: 0
+    max: 40
+    step: 0.1
+    initial: 0
+    mode: box
+    unit_of_measurement: °C
+  cv_ramp_ref_keuken:
+    name: CV ramp referentie Keuken
+    min: 0
+    max: 40
+    step: 0.1
+    initial: 0
+    mode: box
+    unit_of_measurement: °C
   nacht_keuken:
     name: Nacht Keuken
     min: 14.0
@@ -83,6 +116,11 @@ input_datetime:
     has_date: true
     has_time: true
     icon: mdi:delta
+  cv_aanvoer_ramp_check:
+    name: CV aanvoer laatste rampcontrole
+    has_date: true
+    has_time: true
+    icon: mdi:timer-outline
 counter:
   cv_counter:
     name: CV Counter
@@ -399,52 +437,132 @@ automation:
   mode: single
 - id: '1772103141610'
   alias: CV Control Setpoint Dynamisch
-  description: ''
+  description: Open eerst de kranen; verhoog de aanvoer alleen stapsgewijs als ruimtes niet reageren.
   triggers:
   - trigger: time_pattern
-    minutes: /2
+    seconds: /30
+  - trigger: homeassistant
+    event: start
   actions:
   - variables:
-      ha_ketelsturing_actief: '{{ is_state(''input_boolean.cv_ketelsturing_ha_actief'',
-        ''on'') }}'
-      boost_active: '{{ is_state(''input_boolean.cv_boost_bureel'', ''on'') or is_state(''input_boolean.cv_boost_living'',
-        ''on'') or is_state(''input_boolean.cv_boost_keuken'', ''on'') }}'
-      boost_setpoint: '{{ states(''input_number.cv_boost_aanvoer_temp'') | float(65)
-        }}'
-      dag: '{{ states(''input_number.temp_wens_dag'') | float }}'
-      nacht: '{{ states(''input_number.temp_wens_nacht'') | float }}'
-      wens_bureel: '{{ dag if is_state(''input_boolean.cv_bureel'',''on'') else nacht
-        }}'
-      delta_bureel: '{{ wens_bureel - (states(''sensor.cv_bureel_temperatuur_stabiel'')
-        | float(0)) }}'
-      wens_living: '{{ dag if is_state(''input_boolean.cv_living_aan'',''on'') else
-        nacht }}'
-      delta_living: '{{ wens_living - (states(''sensor.cv_living_temperatuur_stabiel'')
-        | float(0)) }}'
-      wens_keuken: '{{ dag if is_state(''input_boolean.cv_keuken_en_tussen_aan'',''on'')
-        else nacht }}'
-      delta_keuken: '{{ wens_keuken - (states(''sensor.cv_keuken_temperatuur_stabiel'')
-        | float(0)) }}'
-      max_delta: '{{ [delta_bureel, delta_living, delta_keuken ] | max }}'
-      control_setpoint: "{% if boost_active | bool %}\n  {{ boost_setpoint }}\n{%
-        elif max_delta <= 0 %}\n  20\n{% elif max_delta > 2 %}\n  60\n{% elif max_delta
-        > 1 %}\n  55\n{% elif max_delta > 0.5 %}\n  48\n{% else %}\n  42\n{% endif
-        %}\n"
-  - condition: template
-    value_template: '{{ ha_ketelsturing_actief | bool }}'
+      ha_ketelsturing_actief: "{{ is_state('input_boolean.cv_ketelsturing_ha_actief', 'on') }}"
+      boost_active: "{{ is_state('input_boolean.cv_boost_bureel', 'on') or is_state('input_boolean.cv_boost_living', 'on') or is_state('input_boolean.cv_boost_keuken', 'on') }}"
+      boost_setpoint: "{{ states('input_number.cv_boost_aanvoer_temp') | float(60) }}"
+      dag: "{{ states('input_number.temp_wens_dag') | float(21) }}"
+      nacht: "{{ states('input_number.temp_wens_nacht') | float(17) }}"
+      delta_bureel: "{{ (dag if is_state('input_boolean.cv_bureel','on') else nacht) - states('sensor.cv_bureel_temperatuur_stabiel') | float(0) }}"
+      delta_living: "{{ (dag if is_state('input_boolean.cv_living_aan','on') else nacht) - states('sensor.cv_living_temperatuur_stabiel') | float(0) }}"
+      delta_keuken: "{{ (dag if is_state('input_boolean.cv_keuken_en_tussen_aan','on') else nacht) - states('sensor.cv_keuken_temperatuur_stabiel') | float(0) }}"
+      max_delta: "{{ [delta_bureel | float, delta_living | float, delta_keuken | float] | max }}"
+      ramp_setpoint: "{{ states('input_number.cv_aanvoer_setpoint') | float(0) }}"
+      ramp_elapsed: "{{ (as_timestamp(now()) - as_timestamp(states('input_datetime.cv_aanvoer_ramp_check'), 0)) | int(0) }}"
+      ramp_progress: "{{ (delta_bureel | float > 0.5 and states('sensor.cv_bureel_temperatuur_stabiel') | float(0) >= states('input_number.cv_ramp_ref_bureel') | float(0) + 0.2) or (delta_living | float > 0.5 and states('sensor.cv_living_temperatuur_stabiel') | float(0) >= states('input_number.cv_ramp_ref_living') | float(0) + 0.2) or (delta_keuken | float > 0.5 and states('sensor.cv_keuken_temperatuur_stabiel') | float(0) >= states('input_number.cv_ramp_ref_keuken') | float(0) + 0.2) }}"
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ not (ha_ketelsturing_actief | bool) or (boost_active | bool) or max_delta | float <= 0.5 }}"
+      sequence:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.cv_aanvoer_setpoint
+        data:
+          value: 0
+    - conditions:
+      - condition: template
+        value_template: "{{ ha_ketelsturing_actief | bool and not (boost_active | bool) and max_delta | float > 0.5 and ramp_setpoint | float <= 0 }}"
+      sequence:
+      - repeat:
+          for_each: "{{ [{'zone':'Bureel','delta':delta_bureel | float}, {'zone':'Living','delta':delta_living | float}, {'zone':'Keuken','delta':delta_keuken | float}] }}"
+          sequence:
+          - if:
+            - condition: template
+              value_template: "{{ repeat.item.delta > 0.5 }}"
+            then:
+            - repeat:
+                for_each: "{% from 'rt_tools.jinja' import rt_climates_json with context %} {{ rt_climates_json(repeat.item.zone) | from_json }}"
+                sequence:
+                - action: climate.set_temperature
+                  target:
+                    entity_id: "{{ repeat.item }}"
+                  data:
+                    temperature: 30
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.cv_aanvoer_setpoint
+        data:
+          value: 30
+      - repeat:
+          for_each: "{{ [{'delta':delta_bureel | float,'sensor':'sensor.cv_bureel_temperatuur_stabiel','ref':'input_number.cv_ramp_ref_bureel'}, {'delta':delta_living | float,'sensor':'sensor.cv_living_temperatuur_stabiel','ref':'input_number.cv_ramp_ref_living'}, {'delta':delta_keuken | float,'sensor':'sensor.cv_keuken_temperatuur_stabiel','ref':'input_number.cv_ramp_ref_keuken'}] }}"
+          sequence:
+          - if:
+            - condition: template
+              value_template: "{{ repeat.item.delta > 0.5 }}"
+            then:
+            - action: input_number.set_value
+              target:
+                entity_id: "{{ repeat.item.ref }}"
+              data:
+                value: "{{ states(repeat.item.sensor) | float(0) }}"
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.cv_aanvoer_ramp_check
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+      - action: logbook.log
+        data:
+          name: CV Controller
+          message: "Warmtevraag {{ max_delta | round(2) }} °C: kranen eerst geopend; aanvoer gestart op 30 °C."
+    - conditions:
+      - condition: template
+        value_template: "{{ ha_ketelsturing_actief | bool and not (boost_active | bool) and max_delta | float > 0.5 and ramp_setpoint | float > 0 and ramp_elapsed | int >= 300 }}"
+      sequence:
+      - if:
+        - condition: template
+          value_template: "{{ ramp_progress | bool }}"
+        then:
+        - action: logbook.log
+          data:
+            name: CV Controller
+            message: "Ruimtetemperatuur reageert; aanvoer blijft {{ ramp_setpoint }} °C."
+        else:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.cv_aanvoer_setpoint
+          data:
+            value: "{{ [ramp_setpoint | float + 2, 60] | min }}"
+        - action: logbook.log
+          data:
+            name: CV Controller
+            message: "Geen meetbare ruimteverwarming; aanvoer verhoogd naar {{ [ramp_setpoint | float + 2, 60] | min }} °C."
+      - repeat:
+          for_each: "{{ [{'delta':delta_bureel | float,'sensor':'sensor.cv_bureel_temperatuur_stabiel','ref':'input_number.cv_ramp_ref_bureel'}, {'delta':delta_living | float,'sensor':'sensor.cv_living_temperatuur_stabiel','ref':'input_number.cv_ramp_ref_living'}, {'delta':delta_keuken | float,'sensor':'sensor.cv_keuken_temperatuur_stabiel','ref':'input_number.cv_ramp_ref_keuken'}] }}"
+          sequence:
+          - if:
+            - condition: template
+              value_template: "{{ repeat.item.delta > 0.5 }}"
+            then:
+            - action: input_number.set_value
+              target:
+                entity_id: "{{ repeat.item.ref }}"
+              data:
+                value: "{{ states(repeat.item.sensor) | float(0) }}"
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.cv_aanvoer_ramp_check
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+  - variables:
+      control_setpoint: "{% if not (ha_ketelsturing_actief | bool) %}0{% elif boost_active | bool %}{{ boost_setpoint }}{% elif max_delta | float > 0.5 %}{{ states('input_number.cv_aanvoer_setpoint') | float(0) }}{% else %}0{% endif %}"
   - action: logbook.log
     data:
       name: CV Controller
-      message: 'Warmtevraag: {{ max_delta }}, boost: {{ boost_active }}, setpoint:
-        {{ control_setpoint }}, CH enable: {{ ''true'' if max_delta > 0 or boost_active
-        | bool else ''false'' }}
-
-        '
+      message: "Warmtevraag {{ max_delta | round(2) }} °C, boost {{ boost_active }}, setpoint {{ control_setpoint }} °C."
   - action: opentherm_gw.set_control_setpoint
     data:
       gateway_id: otgw
-      temperature: '{{ control_setpoint | float }}'
+      temperature: "{{ control_setpoint | float }}"
   mode: single
+  max_exceeded: silent
 - id: '1772527831848'
   alias: (TEST) Alle CV kranen open
   description: Zet alle slimme radiatorkranen volledig open voor onderhoud
@@ -654,7 +772,7 @@ automation:
 script:
   cv_boost_zone_parameterized:
     alias: CV boost zone (parameterized)
-    description: Stel de Tado kranen in met dynamische bias-compensatie
+    description: Open Tado kranen volledig bij warmtevraag en zet ze anders op de gewenste kamertemperatuur.
     mode: single
     fields:
       zone:
@@ -727,11 +845,7 @@ script:
               }}
 
               '
-            berekend_setpoint: "{% set prioriteit = hoge_prioriteit | default(false)
-              | bool %}\n{% if boost_active %}\n  30\n{% elif prioriteit and delta
-              > 0 %}\n  30\n{% elif delta <= 0 %}\n  {{ basis }}\n{% else %}\n  {{
-              (basis\n     + (delta * 1.6)\n     + (bias * 0.6)) | round(1) }}\n{%
-              endif %}\n"
+            berekend_setpoint: "{% if boost_active or delta > 0.5 %}\n  30\n{% else %}\n  {{ basis }}\n{% endif %}\n"
             new_setpoint: "{% if (berekend_setpoint - huidig_setpoint) | abs < 0.2
               %}\n  {{ huidig_setpoint }}\n{% else %}\n  {{ berekend_setpoint }}\n\
               {% endif %}\n"

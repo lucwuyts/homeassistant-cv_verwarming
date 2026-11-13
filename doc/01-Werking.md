@@ -7,7 +7,7 @@ De verwarming werkt in vier lagen:
 1. De zonehelpers bepalen per hoofd-zone of dag- of nachttemperatuur gewenst is.
 2. Losse temperatuursensoren meten de werkelijke kamertemperatuur.
 3. Home Assistant stuurt de Tado X-radiatorkranen elke minuut bij.
-4. Home Assistant berekent elke twee minuten de benodigde cv-watertemperatuur en stuurt die via de OpenTherm Gateway naar de ketel.
+4. Home Assistant stuurt bij warmtevraag eerst de kranen open en houdt daarna de cv-aanvoer via OpenTherm laag; alleen zonder ruimteverwarming wordt die langzaam verhoogd.
 
 Kort weergegeven:
 
@@ -53,23 +53,18 @@ Als de NEST aan wordt gezet, dan wordt de verwarming living aangezet (2 minuten 
 
 ## 3. Ketelsturing via OpenTherm
 
-De actieve automatisering `automation.cv_control_setpoint_dynamisch` draait iedere twee minuten. Zij gebruikt de grootste zone-delta en kiest het OpenTherm-regelsetpoint. Als `input_boolean.cv_ketelsturing_ha_actief` uit staat, stuurt deze automatisering geen nieuw setpoint naar de OTGW.
+De actieve automatisering `automation.cv_control_setpoint_dynamisch` controleert iedere 30 seconden en na een Home Assistant-start de warmtevraag. Een zone telt mee bij een afwijking groter dan 0,5 °C. Die kleine dode band voorkomt dat sensorruis de ketel laat aanslaan.
 
-| Situatie | OpenTherm-setpoint |
-|---|---:|
-| `cv_ketelsturing_ha_actief` uit | geen nieuw HA-setpoint |
-| Boost actief | `input_number.cv_boost_aanvoer_temp` |
-| Geen boost en grootste delta `<= 0 °C` | 20 °C |
-| Geen boost en grootste delta `> 0 en <= 0,5 °C` | 42 °C |
-| Geen boost en grootste delta `> 0,5 en <= 1 °C` | 48 °C |
-| Geen boost en grootste delta `> 1 en <= 2 °C` | 55 °C |
-| Geen boost en grootste delta `> 2 °C` | 60 °C |
+| Situatie | Actie |
+|---|---|
+| `cv_ketelsturing_ha_actief` uit | OpenTherm-setpoint 0 °C; rampstatus wordt gewist |
+| Boost actief | `input_number.cv_boost_aanvoer_temp`; boost opent de gekozen kranen |
+| Geen boost en grootste delta `<= 0,5 °C` | OpenTherm-setpoint 0 °C en rampstatus wissen |
+| Nieuwe warmtevraag boven 0,5 °C | Eerst kranen van vragende zones naar 30 °C, daarna OpenTherm-setpoint 30 °C |
+| Na vijf minuten geen kamerrespons van minstens 0,2 °C | Aanvoer met 2 °C verhogen, tot maximaal 60 °C |
+| Kamerrespons van minstens 0,2 °C | Aanvoer vasthouden en een nieuwe meetperiode starten |
 
-Dit setpoint wordt verstuurd met `opentherm_gw.set_control_setpoint` naar gateway `otgw`. De automatisering schrijft daarnaast de berekende warmtevraag en CH-status in het logboek.
-
-Bij geen positieve warmtevraag wordt 20 °C verzonden, niet 0 °C. De feitelijke ketelreactie hangt daarnaast af van de OpenTherm-ketel/gateway en zijn eigen beveiligingen.
-
-
+De kamerrespons wordt alleen gemeten voor zones die nog warmtevraag hebben. Elke 30 seconden wordt het huidige OpenTherm-setpoint opnieuw geschreven; dit voorkomt dat de OTGW-aanvraag verloopt. Bij einde warmtevraag wordt de override met setpoint 0 °C vrijgegeven.
 
 ## 4. Radiatorkranen
 
@@ -77,28 +72,9 @@ Bij geen positieve warmtevraag wordt 20 °C verzonden, niet 0 °C. De feitelijke
 
 Het script zoekt per Home Assistant-ruimte alle `climate`-entiteiten waarvan de zichtbare naam met `RT` begint. Daardoor is de ruimtetoewijzing en naamgeving onderdeel van de regeling.
 
-Per kraan berekent het script normaal:
+Bij warmtevraag groter dan 0,5 °C zet het script de kranen van die zone op 30 °C zodat ze eerst voldoende openen. Zonder warmtevraag keren ze terug naar de basis dag- of nachttemperatuur. Tijdens boost gaan de kranen van de gebooste zone eveneens naar 30 °C; Tussen volgt de Keuken-boost.
 
-```text
-basis = dag- of nachttemperatuur
-delta = basis - externe kamertemperatuur
-bias  = kraantemperatuur - externe kamertemperatuur, begrensd tussen 0 en 2 °C
-
-als delta <= 0:
-    kraansetpoint = basis
-anders:
-    kraansetpoint = basis + 1,6 × delta + 0,6 × bias
-```
-
-Tijdens boost wordt dit overschreven naar 30 °C voor de kranen van de gebooste zone. Tussen volgt daarbij de Keuken-boost.
-
-Een wijziging kleiner dan 0,2 °C wordt niet doorgevoerd; het bestaande setpoint blijft dan staan. Dit vermindert kleine, voortdurende bijstellingen.
-
-De bias compenseert dat een radiatorkraan vlak bij de radiator vaak warmer meet dan de losse kamersensor. Een negatieve bias wordt niet toegepast; een positieve bias is maximaal 2 °C.
-
-Het script heeft een extra parameter gekregen "hoge_prioriteit".   Voor keuken (en tussen) wordt die altijd als True meegegeven.  Dit heeft het effect dat die ruimte even snel opwarmt als met de Boost parameter.
-
-
+De normale kraanregeling en de ketelregeling hebben dezelfde dode band van 0,5 °C. Een kraansetpoint-wijziging kleiner dan 0,2 °C wordt niet verstuurd.
 
 ## 5. Buitentemperatuur en gateway
 

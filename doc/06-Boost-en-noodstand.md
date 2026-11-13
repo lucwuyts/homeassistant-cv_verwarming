@@ -9,7 +9,7 @@ Deze werking is actief in Home Assistant sinds 23 augustus 2026.
 | `input_number.cv_boost_aanvoer_temp` | OpenTherm-aanvoertemperatuur tijdens boost | 60 °C bij de opname van 13 november 2026 |
 | `input_boolean.cv_ketelsturing_ha_actief` | bepaalt of Home Assistant setpoints naar de ketel mag sturen | aan |
 
-`input_boolean.cv_ketelsturing_ha_actief` is de noodschakelaar. Zet deze uit wanneer een gewone noodthermostaat de ketel moet overnemen. Home Assistant blijft dan wel de overige automatiseringen uitvoeren, maar `automation.cv_control_setpoint_dynamisch` stuurt geen nieuw `opentherm_gw.set_control_setpoint` meer naar de OTGW.
+`input_boolean.cv_ketelsturing_ha_actief` is de noodschakelaar. Zet deze uit wanneer een gewone noodthermostaat de ketel moet overnemen. Home Assistant blijft dan wel de overige automatiseringen uitvoeren, maar stuurt setpoint 0 °C om de OpenTherm-override vrij te geven.
 
 ## Boostgedrag
 
@@ -19,21 +19,18 @@ Deze werking is actief in Home Assistant sinds 23 augustus 2026.
 | Living | `input_boolean.cv_boost_living` | Living volledig open, setpoint 30 °C | `cv_boost_aanvoer_temp` |
 | Keuken + Tussen | `input_boolean.cv_boost_keuken` | Keuken en Tussen volledig open, setpoint 30 °C | `cv_boost_aanvoer_temp` |
 
-Als geen boost actief is, gebruikt de ketelregelaar opnieuw de normale delta-tabel. Als `cv_ketelsturing_ha_actief` uit staat, heeft boost geen effect op het ketelsetpoint omdat Home Assistant dan niets naar de OTGW schrijft.
+Zonder boost geldt de normale valve-first regeling: bij een zone-afwijking boven 0,5 °C openen eerst de kranen, daarna start de aanvoer op 30 °C. Alleen als de ruimtetemperatuur vijf minuten lang niet minstens 0,2 °C stijgt, wordt de aanvoer met 2 °C verhoogd tot maximaal 60 °C. Zodra een kamer reageert, blijft de huidige aanvoer staan en start een nieuwe meetperiode. Bij geen vraag wordt de OpenTherm-override vrijgegeven met 0 °C.
 
-## Normale ketelsturing
-
-De actieve automatisering is `automation.cv_control_setpoint_dynamisch`. Zij draait iedere twee minuten.
+De actieve automatisering is `automation.cv_control_setpoint_dynamisch`. Zij schrijft iedere 30 seconden het actuele setpoint naar de OTGW, omdat de OpenTherm Gateway de override kan laten verlopen.
 
 | Situatie | OpenTherm-setpoint vanuit Home Assistant |
 |---|---:|
-| `cv_ketelsturing_ha_actief` uit | geen nieuw HA-setpoint |
+| `cv_ketelsturing_ha_actief` uit | 0 °C (override vrijgeven) |
 | Boost actief | `input_number.cv_boost_aanvoer_temp` |
-| Geen boost en `max_delta <= 0 °C` | 20 °C |
-| Geen boost en `max_delta > 0 en <= 0,5 °C` | 42 °C |
-| Geen boost en `max_delta > 0,5 en <= 1 °C` | 48 °C |
-| Geen boost en `max_delta > 1 en <= 2 °C` | 55 °C |
-| Geen boost en `max_delta > 2 °C` | 60 °C |
+| Geen boost en delta `<= 0,5 °C` | 0 °C (geen warmtevraag) |
+| Nieuwe warmtevraag | 30 °C, nadat vragende kranen eerst open zijn gestuurd |
+| Geen meetbare kamerrespons na vijf minuten | +2 °C, maximaal 60 °C |
+| Kamer reageert minstens 0,2 °C | huidig setpoint vasthouden |
 
 ## Controle
 

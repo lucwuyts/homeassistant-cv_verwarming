@@ -39,11 +39,11 @@ Let op: bij een Home Assistant-herstart kan zo'n stabiele sensor eerst nog `unkn
 
 ### Geen warmtevraag is 20 °C
 
-De actieve ketelregelaar stuurt bij `max_delta <= 0` een OpenTherm-setpoint van 20 °C.
+De actieve ketelregelaar geeft bij `max_delta <= 0,5 °C` de OpenTherm-override vrij met setpoint 0 °C. Bij meer warmtevraag opent hij eerst de kranen en verhoogt hij de aanvoer pas na vijf minuten zonder minstens 0,2 °C kamerrespons.
 
 ### Noodstand voor gewone thermostaat
 
-De helper `input_boolean.cv_ketelsturing_ha_actief` dient als noodschakelaar. Wanneer deze uit staat, voert `automation.cv_control_setpoint_dynamisch` geen `opentherm_gw.set_control_setpoint` meer uit. Daardoor schrijft Home Assistant geen nieuw ketelsetpoint meer naar de OpenTherm Gateway en kan een gewone noodthermostaat de warmtevraag overnemen.
+De helper `input_boolean.cv_ketelsturing_ha_actief` dient als noodschakelaar. Wanneer deze uit staat, voert `automation.cv_control_setpoint_dynamisch` geen `opentherm_gw.set_control_setpoint` meer uit. Home Assistant schrijft dan iedere 30 seconden setpoint 0 °C om de OpenTherm-override vrij te geven, zodat een gewone noodthermostaat de warmtevraag kan overnemen.
 
 Deze softwarestand vervangt geen fysieke test. Controleer apart of de noodthermostaat elektrisch en OpenTherm-technisch echt rechtstreeks of correct via de gateway kan werken.
 

@@ -14,7 +14,7 @@ Deze repository houdt alleen de centrale verwarmingssturing apart bij in [`../pa
 
 ## Samenvatting
 
-De woningregeling gebruikt drie hoofd-zones: **Bureel**, **Living** en **Keuken + Tussen**. Elke zone heeft een aan/uit-helper. Een ingeschakelde zone gebruikt de dagtemperatuur; een uitgeschakelde zone gebruikt de nachttemperatuur. De grootste positieve afwijking tussen gewenste en gemeten ruimtetemperatuur bepaalt de gevraagde cv-watertemperatuur.
+De woningregeling gebruikt drie hoofd-zones: **Bureel**, **Living** en **Keuken + Tussen**. Elke zone heeft een aan/uit-helper. Een ingeschakelde zone gebruikt de dagtemperatuur; een uitgeschakelde zone gebruikt de nachttemperatuur. Bij een ruimtetekort opent de regeling eerst de betrokken kranen. De ketel begint op 30 °C en verhoogt de aanvoer alleen in stappen van 2 °C wanneer er na vijf minuten geen meetbare ruimteverwarming is (maximaal 60 °C).
 
 De Tado X-radiatorkranen worden afzonderlijk bijgestuurd. Home Assistant zoekt ze dynamisch per ruimte op aan de hand van een naam die met `RT` begint. De ketel wordt via de OpenTherm Gateway (`otgw`) aangestuurd.
 

@@ -3,6 +3,7 @@ param(
     [ValidateSet('Snapshot', 'Deploy')]
     [string]$Mode = 'Snapshot',
     [string]$HomeAssistantConfig = '\\homeassistant\config',
+    [string]$DocumentationDestination = 'M:\PRIVE\Woning\_HomeAssistant\Centrale Verwarming',
     [switch]$Apply
 )
 
@@ -14,7 +15,7 @@ if (-not (Test-Path -LiteralPath $HomeAssistantConfig -PathType Container)) {
     throw "Home Assistant-configuratiemap niet bereikbaar: $HomeAssistantConfig"
 }
 if ($Mode -eq 'Deploy' -and -not $Apply) {
-    throw 'Deploy schrijft alleen het CV-package en de CV-macro naar Home Assistant. Herhaal met -Mode Deploy -Apply na controle.'
+    throw 'Deploy schrijft het CV-package en de CV-macro naar Home Assistant en spiegelt doc naar de documentatiemap. Herhaal met -Mode Deploy -Apply na controle.'
 }
 
 $files = @(
@@ -50,7 +51,19 @@ foreach ($file in $files) {
     Write-Host "$Mode  $($file.HA)"
 }
 
-Write-Host 'Alleen het CV-package en de CV-macro zijn gesynchroniseerd.'
+Write-Host 'Het CV-package en de CV-macro zijn gesynchroniseerd.'
 if ($Mode -eq 'Deploy') {
+    $docSource = Join-Path $repoRoot 'doc'
+    $docDestination = [System.IO.Path]::GetFullPath($DocumentationDestination)
+    if (-not (Test-Path -LiteralPath $docSource -PathType Container)) {
+        throw "Documentatiemap ontbreekt in de repository: $docSource"
+    }
+    $null = New-Item -ItemType Directory -Path $docDestination -Force
+    & robocopy $docSource $docDestination /MIR /R:2 /W:2
+    $robocopyExitCode = $LASTEXITCODE
+    if ($robocopyExitCode -ge 8) {
+        throw "Documentatiesynchronisatie is mislukt (robocopy-code $robocopyExitCode)."
+    }
+    Write-Host "Documentatie gespiegeld naar $docDestination (robocopy-code $robocopyExitCode)."
     Write-Host 'Controleer de HA-configuratie en voer daarna een herlaadactie of herstart uit.'
 }
