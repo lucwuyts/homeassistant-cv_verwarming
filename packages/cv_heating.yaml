@@ -661,12 +661,12 @@ script:
         name: Zone
         required: true
         selector:
-          text: {}
+          text:
       cv_uit:
         name: CV uit
         required: true
         selector:
-          boolean: {}
+          boolean:
       huidige_temp:
         name: Huidige temperatuur (optioneel)
         required: false
@@ -686,7 +686,7 @@ script:
         name: Hoge Prioriteit (optioneel)
         required: false
         selector:
-          boolean: {}
+          boolean:
     sequence:
     - variables:
         nacht: '{{ cv_uit }}'
@@ -752,11 +752,11 @@ script:
       zone:
         required: true
         selector:
-          text: {}
+          text:
       cv_uit:
         required: true
         selector:
-          boolean: {}
+          boolean:
       temp_sensor:
         required: true
         selector:
