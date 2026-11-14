@@ -37,9 +37,9 @@ Deze sensoren nemen alleen geldige numerieke bronwaarden over. Wanneer de onderl
 
 Let op: bij een Home Assistant-herstart kan zo'n stabiele sensor eerst nog `unknown` zijn tot de bron opnieuw een geldige waarde doorgeeft.
 
-### Geen warmtevraag is 20 °C
+### Geen warmtevraag geeft setpoint 0 °C
 
-De actieve ketelregelaar geeft bij `max_delta <= 0,5 °C` de OpenTherm-override vrij met setpoint 0 °C. Bij meer warmtevraag opent hij eerst de kranen en verhoogt hij de aanvoer pas na vijf minuten zonder minstens 0,2 °C kamerrespons.
+De actieve ketelregelaar start bij `max_delta > 0,5 °C` en houdt warmtevraag vast tot `max_delta <= 0,3 °C`. Zo voorkomt de hysterese schakelen door afronding rond 0,5 °C. Bij warmtevraag stelt de kraanregeling de kranen proportioneel hoger in. De aanvoer stijgt pas na vijf minuten zonder minstens 0,2 °C kamerrespons en blijft begrensd op basis van de grootte van de warmtevraag.
 
 ### Noodstand voor gewone thermostaat
 

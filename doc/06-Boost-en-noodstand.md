@@ -19,7 +19,7 @@ Deze werking is actief in Home Assistant sinds 23 augustus 2026.
 | Living | `input_boolean.cv_boost_living` | Living volledig open, setpoint 30 °C | `cv_boost_aanvoer_temp` |
 | Keuken + Tussen | `input_boolean.cv_boost_keuken` | Keuken en Tussen volledig open, setpoint 30 °C | `cv_boost_aanvoer_temp` |
 
-Zonder boost geldt de normale valve-first regeling: bij een zone-afwijking boven 0,5 °C openen eerst de kranen, daarna start de aanvoer op 30 °C. Alleen als de ruimtetemperatuur vijf minuten lang niet minstens 0,2 °C stijgt, wordt de aanvoer met 2 °C verhoogd tot maximaal 60 °C. Zodra een kamer reageert, blijft de huidige aanvoer staan en start een nieuwe meetperiode. Bij geen vraag wordt de OpenTherm-override vrijgegeven met 0 °C.
+Zonder boost geldt de normale proportionele regeling: bij een zone-afwijking boven 0,5 °C wordt de kraan hoger ingesteld op basis van de grootte van het tekort. Bij 0,5 °C tekort is dat 1,5 °C boven de normale dag- of nachtbasis; alleen bij boost gaat de kraan direct naar 30 °C. De aanvoer start op 30 °C. Alleen als de ruimtetemperatuur vijf minuten lang niet minstens 0,2 °C stijgt, wordt de aanvoer met 2 °C verhoogd. De limiet is 36 °C bij maximaal 0,75 °C warmtevraag, 42 °C tot 1,25 °C, 50 °C tot 2 °C en anders 60 °C. Warmtevraag start boven 0,5 °C en blijft actief tot de afwijking 0,3 °C of kleiner is, zodat afronding van de sensor niet voor schakelen zorgt. Bij geen vraag wordt de OpenTherm-override vrijgegeven met 0 °C.
 
 De actieve automatisering is `automation.cv_control_setpoint_dynamisch`. Zij schrijft iedere 30 seconden het actuele setpoint naar de OTGW, omdat de OpenTherm Gateway de override kan laten verlopen.
 
@@ -27,9 +27,10 @@ De actieve automatisering is `automation.cv_control_setpoint_dynamisch`. Zij sch
 |---|---:|
 | `cv_ketelsturing_ha_actief` uit | 0 °C (override vrijgeven) |
 | Boost actief | `input_number.cv_boost_aanvoer_temp` |
-| Geen boost en delta `<= 0,5 °C` | 0 °C (geen warmtevraag) |
-| Nieuwe warmtevraag | 30 °C, nadat vragende kranen eerst open zijn gestuurd |
-| Geen meetbare kamerrespons na vijf minuten | +2 °C, maximaal 60 °C |
+| Geen lopende vraag en delta `<= 0,5 °C` | 0 °C (nog geen warmtevraag) |
+| Lopende vraag en delta `<= 0,3 °C` | 0 °C (vraag beëindigd) |
+| Nieuwe warmtevraag | 30 °C, nadat vragende kranen proportioneel hoger zijn ingesteld |
+| Geen meetbare kamerrespons na vijf minuten | +2 °C, begrensd op de limiet voor de huidige warmtevraag |
 | Kamer reageert minstens 0,2 °C | huidig setpoint vasthouden |
 
 ## Controle

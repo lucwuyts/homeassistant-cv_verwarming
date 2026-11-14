@@ -53,18 +53,19 @@ Als de NEST aan wordt gezet, dan wordt de verwarming living aangezet (2 minuten 
 
 ## 3. Ketelsturing via OpenTherm
 
-De actieve automatisering `automation.cv_control_setpoint_dynamisch` controleert iedere 30 seconden en na een Home Assistant-start de warmtevraag. Een zone telt mee bij een afwijking groter dan 0,5 °C. Die kleine dode band voorkomt dat sensorruis de ketel laat aanslaan.
+De actieve automatisering `automation.cv_control_setpoint_dynamisch` controleert iedere 30 seconden en na een Home Assistant-start de warmtevraag. Warmtevraag start bij meer dan 0,5 °C afwijking en blijft actief tot de afwijking 0,3 °C of kleiner wordt. Deze hysterese voorkomt aan/uit-klapperen door sensorafronding op 0,1 °C.
 
 | Situatie | Actie |
 |---|---|
 | `cv_ketelsturing_ha_actief` uit | OpenTherm-setpoint 0 °C; rampstatus wordt gewist |
 | Boost actief | `input_number.cv_boost_aanvoer_temp`; boost opent de gekozen kranen |
-| Geen boost en grootste delta `<= 0,5 °C` | OpenTherm-setpoint 0 °C en rampstatus wissen |
-| Nieuwe warmtevraag boven 0,5 °C | Eerst kranen van vragende zones naar 30 °C, daarna OpenTherm-setpoint 30 °C |
-| Na vijf minuten geen kamerrespons van minstens 0,2 °C | Aanvoer met 2 °C verhogen, tot maximaal 60 °C |
+| Geen lopende vraag en grootste delta `<= 0,5 °C` | Geen nieuwe warmtevraag |
+| Lopende vraag en grootste delta `<= 0,3 °C` | OpenTherm-setpoint 0 °C en rampstatus wissen |
+| Nieuwe warmtevraag boven 0,5 °C | Kranen eerst proportioneel hoger instellen; daarna start de aanvoer op 30 °C |
+| Na vijf minuten geen kamerrespons van minstens 0,2 °C | Aanvoer met 2 °C verhogen, tot de limiet die past bij de warmtevraag |
 | Kamerrespons van minstens 0,2 °C | Aanvoer vasthouden en een nieuwe meetperiode starten |
 
-De kamerrespons wordt alleen gemeten voor zones die nog warmtevraag hebben. Elke 30 seconden wordt het huidige OpenTherm-setpoint opnieuw geschreven; dit voorkomt dat de OTGW-aanvraag verloopt. Bij einde warmtevraag wordt de override met setpoint 0 °C vrijgegeven.
+De maximale aanvoer is 36 °C bij een delta tot en met 0,75 °C, 42 °C tot en met 1,25 °C, 50 °C tot en met 2 °C en 60 °C bij grotere warmtevraag. Als de vraag afneemt, verlaagt de regelaar de limiet direct. De kamerrespons wordt alleen gemeten voor zones die nog warmtevraag hebben. Elke 30 seconden wordt het actuele OpenTherm-setpoint opnieuw geschreven; dit voorkomt dat de OTGW-aanvraag verloopt. Bij einde warmtevraag wordt de override met setpoint 0 °C vrijgegeven.
 
 ## 4. Radiatorkranen
 
@@ -72,9 +73,9 @@ De kamerrespons wordt alleen gemeten voor zones die nog warmtevraag hebben. Elke
 
 Het script zoekt per Home Assistant-ruimte alle `climate`-entiteiten waarvan de zichtbare naam met `RT` begint. Daardoor is de ruimtetoewijzing en naamgeving onderdeel van de regeling.
 
-Bij warmtevraag groter dan 0,5 °C zet het script de kranen van die zone op 30 °C zodat ze eerst voldoende openen. Zonder warmtevraag keren ze terug naar de basis dag- of nachttemperatuur. Tijdens boost gaan de kranen van de gebooste zone eveneens naar 30 °C; Tussen volgt de Keuken-boost.
+Bij normale warmtevraag stelt het script de kraan geleidelijk hoger in: `basis + 3 × delta`, met een maximum van 30 °C. Bij een tekort van 0,5 °C is dat bijvoorbeeld 1,5 °C boven de dag- of nachtbasis, niet meteen 30 °C. Zonder warmtevraag keert de kraan terug naar de basis. Tijdens boost gaan de kranen van de gebooste zone volledig naar 30 °C; Tussen volgt de Keuken-boost.
 
-De normale kraanregeling en de ketelregeling hebben dezelfde dode band van 0,5 °C. Een kraansetpoint-wijziging kleiner dan 0,2 °C wordt niet verstuurd.
+Een kraansetpoint-wijziging kleiner dan 0,2 °C wordt niet verstuurd.
 
 ## 5. Buitentemperatuur en gateway
 
