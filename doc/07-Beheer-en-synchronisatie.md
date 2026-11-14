@@ -14,7 +14,7 @@ Voor een nieuwe installatie is lokaal Python met `ruamel.yaml` nodig (`python -m
 python .\scripts\Migrate-CvToPackage.py
 ```
 
-Het hoort 20 CV-automatiseringen en 8 CV-scripts te tonen. Het stopt zonder bestanden te wijzigen als de live-bestanden daarvan afwijken. Voer daarna uit:
+Het hoort 20 CV-automatiseringen en 8 CV-scripts te tonen. Het stopt zonder bestanden te wijzigen als de live-bestanden daarvan afwijken.
 
 De migratie maakte tijdgestempelde backups van `automations.yaml` en `scripts.yaml` op de HA-share. Alleen de herkende 20 CV-automatiseringen en 8 CV-scripts zijn daaruit verwijderd. `configuration.yaml`, MQTT en alle overige automatiseringen/scripts zijn ongemoeid gebleven. De configuratiecontrole in HA slaagde en HA is herstart.
 
