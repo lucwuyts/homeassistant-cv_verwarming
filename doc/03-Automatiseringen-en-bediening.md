@@ -73,7 +73,7 @@ Om 07:00 gaat `cv_nacht_bezig` weer uit. De automatisering `CV sNachts uit na 1H
 
 ### Eenmalige ochtendstart
 
-De schakelaar **CV: eenmalige ochtendstart** is een optionele handmatige comfortstart. Wanneer deze vooraf wordt aangezet, activeert ze om 06:00 Living en Keuken + Tussen en schakelt ze zichzelf daarna weer uit:
+De schakelaar **CV: eenmalige ochtendstart** is bedoeld voor een dag waarop je de comfortverwarming tijdelijk eerder wilt starten. Wanneer deze automatisering vooraf wordt aangezet, doet ze om 06:00 het volgende:
 
 1. de nachtmarkering uitzetten;
 2. Living inschakelen;

@@ -67,7 +67,7 @@ De gatewayvoeding wordt ieder vol uur 59 seconden onderbroken. Tijdens dat venst
 
 ### Ochtendstart is een bewuste dagschakelaar
 
-Om 07:00 wordt standaard alleen de nachtmarkering uitgezet. Wanneer je de comfortverwarming eerder wilt starten, kun je **CV: eenmalige ochtendstart** vooraf aanzetten. Die start Living en Keuken + Tussen om 06:00 en schakelt zichzelf daarna weer uit.
+Om 07:00 wordt standaard alleen de nachtmarkering uitgezet. Voor dagen waarop je de comfortverwarming eerder wilt starten kan **CV: eenmalige ochtendstart** vooraf worden aangezet. Die start Living en Keuken + Tussen om 06:00 en schakelt zichzelf daarna weer uit.
 
 ### Afwezigheid wordt niet automatisch hersteld
 

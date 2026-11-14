@@ -284,7 +284,7 @@ automation:
       - input_boolean.cv_nic
   mode: single
 - id: '1709214333720'
-  alias: CV: eenmalige ochtendstart
+  alias: 'CV: eenmalige ochtendstart'
   description: ''
   triggers:
   - at: 06:00:00
@@ -307,7 +307,7 @@ automation:
     data:
       stop_actions: true
     target:
-      entity_id: automation.cv_eenmalige_ochtendstart
+      entity_id: "{{ this.entity_id }}"
     action: automation.turn_off
   mode: single
 - id: '1768464947908'
