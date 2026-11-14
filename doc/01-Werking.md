@@ -73,7 +73,7 @@ De maximale aanvoer is 36 °C bij een delta tot en met 0,75 °C, 42 °C tot en m
 
 Het script zoekt per Home Assistant-ruimte alle `climate`-entiteiten waarvan de zichtbare naam met `RT` begint. Daardoor is de ruimtetoewijzing en naamgeving onderdeel van de regeling.
 
-Bij normale warmtevraag stelt het script de kraan geleidelijk hoger in: `basis + 3 × delta`, met een maximum van 30 °C. Bij een tekort van 0,5 °C is dat bijvoorbeeld 1,5 °C boven de dag- of nachtbasis, niet meteen 30 °C. Zonder warmtevraag keert de kraan terug naar de basis. Tijdens boost gaan de kranen van de gebooste zone volledig naar 30 °C; Tussen volgt de Keuken-boost.
+Bij normale warmtevraag stelt het script de kraan geleidelijk hoger in: `basis + 3 × delta`, met een maximum van 30 °C. Bij een tekort groter dan 2 °C gaat de kraan volledig open naar 30 °C. Dat commando blijft staan tot het tekort 1,5 °C of kleiner is; daarna daalt de instelling geleidelijk mee. Zo voorkomt de regeling dat de kraan te vroeg terugloopt. Zonder warmtevraag keert de kraan terug naar de basis. Tijdens boost gaan de kranen van de gebooste zone eveneens volledig naar 30 °C; Tussen volgt de Keuken-boost.
 
 Een kraansetpoint-wijziging kleiner dan 0,2 °C wordt niet verstuurd.
 

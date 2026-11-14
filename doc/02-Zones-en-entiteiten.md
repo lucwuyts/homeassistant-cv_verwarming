@@ -60,7 +60,7 @@ De aanduiding **Gastenkamer Nacht Temp** hoort bij de gastenkamer. In die kamer 
 
 Het aanwezige `script.cv_boost_zone_slim` zet bij een aanroep een zone en boost aan, legt een eindtijd 60 minuten later vast en controleert maximaal 60 minuten. In de onderzochte configuratie is geen directe automatisering gevonden die dit script aanroept; het kan handmatig of vanuit een dashboard worden gestart.
 
-De normale kraanregeling gebruikt de boostschakelaar nu wel: tijdens boost gaan de kranen van de gebooste zone naar 30 °C. De ketelregelaar gebruikt bij actieve boost `input_number.cv_boost_aanvoer_temp`, zolang `input_boolean.cv_ketelsturing_ha_actief` aan staat.
+De normale kraanregeling stelt het setpoint proportioneel hoger in wanneer een ruimte achterloopt. Bij meer dan 2 °C tekort gaat het setpoint naar 30 °C en blijft daar tot het tekort 1,5 °C of kleiner is. Dit is het ingestelde Tado-setpoint; de fysieke klepstand is niet als percentage beschikbaar in de geregistreerde entiteitsattributen. Tijdens boost gaan de kranen van de gebooste zone naar 30 °C. De ketelregelaar gebruikt bij actieve boost `input_number.cv_boost_aanvoer_temp`, zolang `input_boolean.cv_ketelsturing_ha_actief` aan staat.
 
 ## Overige helpers
 
