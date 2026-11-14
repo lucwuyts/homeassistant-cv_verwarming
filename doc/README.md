@@ -31,5 +31,3 @@ Huidige relevante instellingen bij de opname:
 Deze waarden zijn instelbare helpers en kunnen later wijzigen.
 
 In het instellingenscherm staan daarnaast dagschakelaars voor **Automatisch Uit** en **CV: eenmalige ochtendstart**. De eerste bepaalt of de verwarming automatisch mag worden uitgeschakeld; de tweede plant een eenmalige start om 06:00 wanneer de ochtendstart gewenst is.
-
-> Let op: de map `packages/boiler_controller` bestuurt een afzonderlijke elektrische warmwaterboiler. Die is niet de centrale-verwarmingsketel en valt daarom buiten deze documentatie.
