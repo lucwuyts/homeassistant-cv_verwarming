@@ -20,5 +20,5 @@ De migratie maakte tijdgestempelde backups van `automations.yaml` en `scripts.ya
 
 Tijdens deze migratie zijn de ingestelde nummers na het verwijderen van de UI-helpers niet automatisch met hun oude waarden teruggekomen. Ze zijn daarom eenmalig hersteld uit de lokale migratiebackup. De geverifieerde waarden waren dag 21 °C, nacht 17 °C, Nacht Keuken 17 °C en boost-aanvoer 60 °C. De YAML laat `initial` weg waar mogelijk; bij toekomstige herstarts worden de actuele waarden door Home Assistant hersteld.
 
-Verwijder geen helpers die niet in `packages/cv_heating.yaml` zijn gedefinieerd. De ongebruikte gastenkamer-helper `Gastenkamer Nacht Temp` blijft bijvoorbeeld buiten het package.
+Verwijder geen helpers die niet in `packages/cv_heating.yaml` zijn gedefinieerd. De helper Gastenkamer Nacht Temp blijft bijvoorbeeld een UI-helper buiten het package.
 

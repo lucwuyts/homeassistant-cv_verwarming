@@ -35,7 +35,7 @@ Alle apparaten zijn Tado° Smart Radiator Thermostat X. De macro selecteert op d
 | `input_number.temp_wens_dag` | doeltemperatuur voor een ingeschakelde zone | 15–24 °C, stap 0,5 °C |
 | `input_number.temp_wens_nacht` | doeltemperatuur voor een uitgeschakelde zone | 14–22 °C, stap 0,5 °C |
 | `input_number.nacht_keuken` (“Nacht Keuken”) | afzonderlijke nachttemperatuur voor Keuken en Tussen | 14–20 °C, stap 0,5 °C |
-| `Gastenkamer Nacht Temp` (“Gastenkamer Nacht Temp”) | voorziene nachttemperatuur voor de gastenkamer | 6–18 °C, stap 0,5 °C |
+| Gastenkamer Nacht Temp (UI-helper; niet opgenomen in het package) | voorziene nachttemperatuur voor de gastenkamer | 6–18 °C, stap 0,5 °C |
 | `input_datetime.begin_nacht` | tijdstip waarop alle zones naar nacht gaan | tijdwaarde |
 
 Bij de opname van 13 november 2026: dag 21,0 °C, algemene nacht 17,0 °C, Nacht Keuken 17,0 °C, Gastenkamer Nacht Temp 10,0 °C en begin nacht 22:00.
@@ -48,7 +48,7 @@ In de huidige Tado-regeling gebruikt `script.cv_boost_zone_parameterized` voor e
 
 ### Gastenkamer
 
-De aanduiding **Gastenkamer Nacht Temp** hoort bij de gastenkamer. In die kamer is nog geen Tado-radiatorkraan aanwezig. `input_boolean.cv_nic` en `Gastenkamer Nacht Temp` maken daarom nog geen deel uit van de huidige dynamische Tado- en ketelregeling. De toekomstige werking van deze zone moet opnieuw worden bekeken wanneer daar een Tado wordt geplaatst.
+De UI-helper **Gastenkamer Nacht Temp** hoort bij de gastenkamer en staat niet in het CV-package. In die kamer is nog geen Tado-radiatorkraan aanwezig. De bestaande schakelaar `input_boolean.cv_nic` wordt alleen in nachtlogica uitgezet en maakt geen deel uit van de huidige dynamische Tado- en ketelregeling. De verdere regeling van deze zone kan worden toegevoegd wanneer daar een Tado wordt geplaatst.
 
 ## Boosthelpers
 

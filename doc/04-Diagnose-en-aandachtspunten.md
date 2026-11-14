@@ -55,7 +55,7 @@ Er bestaat een afzonderlijke instelling **Nacht Keuken**. De actieve Tado-regeli
 
 ### Gastenkamer heeft nog geen Tado
 
-`Gastenkamer Nacht Temp` en `CV Gastenkamer` gaan over de gastenkamer. Omdat daar nog geen Tado aanwezig is, valt deze kamer buiten de huidige dynamische kraanregeling. De integratie van deze instelling moet opnieuw worden beoordeeld zodra de kamer een slimme radiatorkraan krijgt.
+`Gastenkamer Nacht Temp` en `CV Gastenkamer` gaan over de gastenkamer. Omdat daar nog geen Tado aanwezig is, valt deze kamer buiten de huidige dynamische kraanregeling. De UI-helper blijft buiten het package; de schakelaar wordt alleen in de nachtlogica uitgezet.
 
 ### Booststatus stuurt kranen en ketel
 
@@ -76,7 +76,7 @@ Bij vijf minuten volledige afwezigheid gaan de drie hoofd-zones uit. In de onder
 ## Configuratie-observaties
 
 - De oude MQTT-automatiseringen publiceren dag/nachtwaarden naar `homeassistant/cv/on`, maar stonden uit.
-- `cv_counter` en `cv_constantaan` zijn restanten of aanvullende helpers die niet in de actieve kernregeling terugkomen. `cv_nic` is voor de gastenkamer en moet opnieuw worden bekeken wanneer daar een Tado komt.
+- `cv_counter` en `cv_constantaan` zijn restanten of aanvullende helpers die niet in de actieve kernregeling terugkomen. De gastenkamerschakelaar `cv_nic` wordt alleen in de nachtlogica uitgezet en regelt geen radiator.
 - De afzonderlijke helper Nacht Keuken is nog niet in de actieve Tado-regeling verwerkt; de oudere scripts bevatten bovendien een afwijkende spelling van de entity-id.
 - De boost-eindtijdhelpers worden geschreven door het boostscript, maar `CV Boost Auto Stop` gebruikt deze tijdstippen niet.
 - De onderhoudsactie schakelt `automation.status_cv` uit, maar niet de aparte ketelregelaar.

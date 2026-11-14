@@ -25,7 +25,7 @@ Huidige relevante instellingen bij de opname:
 | Dagtemperatuur | 21,0 °C |
 | Nachttemperatuur | 17,0 °C |
 | Nacht Keuken | 17,0 °C |
-| Gastenkamer Nacht Temp (gastenkamer; nog te herbekijken) | 10,0 °C |
+| Gastenkamer Nacht Temp (UI-helper; buiten package) | 10,0 °C |
 | Begin nacht | 22:00 |
 
 Deze waarden zijn instelbare helpers en kunnen later wijzigen.
