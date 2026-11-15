@@ -17,7 +17,7 @@ De documentatie is samengesteld uit de volgende bronnen op `\\homeassistant\conf
 
 ## Afbakening
 
-- De CV-inventarisatie en migratie zijn op 13 november 2026 uitgevoerd via `\\homeassistant\config`. Alleen `packages/cv_heating.yaml` en `custom_templates/rt_tools.jinja` zijn gepubliceerd; de CV-blokken zijn uit de centrale `automations.yaml` en `scripts.yaml` verwijderd.
+- De CV-inventarisatie en migratie zijn op 13 november 2026 uitgevoerd via `\\homeassistant\config`. `Herstart OTGW` is een zelfstandige automatisering en blijft in de centrale `automations.yaml`; de CV-gerelateerde blokken zijn naar het package verplaatst.
 - Geheimen en persoonsgegevens uit de configuratie zijn niet in deze documentatie opgenomen.
 - De grote historie-database is niet nodig geweest voor het beschrijven van de statische werking.
 - Status- en instelwaarden in deze documenten zijn momentopnamen; de CV-logica staat in het package. Niet-CV-configuratie is niet in deze repository opgenomen.

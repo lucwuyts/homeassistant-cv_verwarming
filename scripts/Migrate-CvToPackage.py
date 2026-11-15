@@ -21,7 +21,6 @@ AUTOMATION_ALIASES = {
     "CV  NachtBezig helper uitzetten op tijdstip ochtend",
     "CV sNachts uit na 1H",
     "CV: eenmalige ochtendstart",
-    "Herstart  OTGW ",
     "Status CV - Alle ruimtes (script)",
     "Stop boost bureel bij uitschakelen",
     "Stop boost living bij uitschakelen",

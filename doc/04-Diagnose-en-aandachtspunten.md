@@ -61,9 +61,9 @@ Er bestaat een afzonderlijke instelling **Nacht Keuken**. De actieve Tado-regeli
 
 Tijdens boost zet `script.cv_boost_zone_parameterized` de kranen van de gebooste zone naar 30 °C. De ketelregelaar gebruikt dan `input_number.cv_boost_aanvoer_temp` als OpenTherm-setpoint, behalve wanneer `input_boolean.cv_ketelsturing_ha_actief` uit staat.
 
-### Ieder uur OTGW herstart
+### Ieder uur OTGW herstart (los van het CV-package)
 
-De gatewayvoeding wordt ieder vol uur 59 seconden onderbroken. Tijdens dat venster kunnen OpenTherm-entiteiten tijdelijk niet beschikbaar zijn en kan een regelactie mislukken of pas bij de volgende cyclus effect krijgen.
+De afzonderlijke Home Assistant-automatisering **Herstart OTGW** onderbreekt ieder vol uur de gatewayvoeding 59 seconden. Ze staat in `automations.yaml`, buiten dit CV-package. Tijdens dat venster kunnen OpenTherm-entiteiten tijdelijk niet beschikbaar zijn en kan een regelactie mislukken of pas bij de volgende cyclus effect krijgen.
 
 ### Ochtendstart is een bewuste dagschakelaar
 

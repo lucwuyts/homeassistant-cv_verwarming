@@ -81,7 +81,7 @@ Een kraansetpoint-wijziging kleiner dan 0,2 °C wordt niet verstuurd.
 
 Iedere minuut stuurt `automation.buiten_temp_cv` de temperatuur uit `weather.wuytskes` als buitentemperatuur naar de OpenTherm Gateway. De waarde wordt met `float(0)` omgezet: bij een ontbrekende of ongeldige bron kan daardoor 0 °C worden verzonden.
 
-De OTGW-voeding wordt bovendien ieder uur 59 seconden uit- en daarna weer ingeschakeld door `automation.new_automation` (`Herstart OTGW`).
+De OTGW-voeding wordt bovendien ieder uur 59 seconden uit- en daarna weer ingeschakeld door de afzonderlijke Home Assistant-automatisering **Herstart OTGW**. Deze automatisering staat bewust buiten het verwarmingspackage, omdat ze losstaat van de CV-regeling.
 
 ## 6. Wat bepaalt uiteindelijk of een radiator warmte krijgt?
 

@@ -124,7 +124,7 @@ Deze stand is nodig tijdens de 2 jaarlijkse onderhoudsbeurt.
 | Status CV - Alle ruimtes (script) | aan |
 | CV Control Setpoint Dynamisch | aan |
 | Buiten Temp -> CV | aan |
-| Herstart OTGW | aan |
+| Herstart OTGW (losse HA-automatisering; buiten het package) | aan |
 | CV Uit op tijdstip | aan |
 | Afwezigheid: zones uit | aan |
 | CV Boost Auto Stop | aan |

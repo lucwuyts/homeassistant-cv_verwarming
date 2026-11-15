@@ -310,30 +310,6 @@ automation:
       entity_id: "{{ this.entity_id }}"
     action: automation.turn_off
   mode: single
-- id: '1768464947908'
-  alias: 'Herstart  OTGW '
-  description: ''
-  triggers:
-  - trigger: time_pattern
-    hours: /1
-    minutes: '00'
-  conditions: []
-  actions:
-  - sequence:
-    - type: turn_off
-      device_id: 97f1e4c4bc3cfa4df41f4cfef3dc0153
-      entity_id: 9ab96eb81e64d055d247e8402f790219
-      domain: switch
-    - delay:
-        hours: 0
-        minutes: 0
-        seconds: 59
-        milliseconds: 0
-    - type: turn_on
-      device_id: 97f1e4c4bc3cfa4df41f4cfef3dc0153
-      entity_id: 9ab96eb81e64d055d247e8402f790219
-      domain: switch
-  mode: single
 - id: '1769860300484'
   alias: Status CV - Alle ruimtes (script)
   description: Stel de thermostatische kranen in.  Alle zones
