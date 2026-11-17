@@ -79,7 +79,9 @@ Een kraansetpoint-wijziging kleiner dan 0,2 °C wordt niet verstuurd.
 
 ## 5. Buitentemperatuur en gateway
 
-Iedere minuut stuurt `automation.buiten_temp_cv` de temperatuur uit `weather.wuytskes` als buitentemperatuur naar de OpenTherm Gateway. De waarde wordt met `float(0)` omgezet: bij een ontbrekende of ongeldige bron kan daardoor 0 °C worden verzonden.
+`automation.buiten_temp_cv` stuurt de temperatuur uit `weather.wuytskes` naar de OpenTherm Gateway wanneer de waarde op 0,1 °C is veranderd. De laatst verstuurde waarde wordt bewaard in `input_number.cv_laatst_verstuurde_buitentemperatuur`; een ontbrekende of ongeldige bron wordt niet verzonden.
+
+De dynamische ketelregelaar blijft iedere 30 seconden de warmtevraag berekenen, maar rondt het `set_control_setpoint` af op hele graden en verstuurt alleen wanneer dat afgeronde setpoint afwijkt van `input_number.cv_laatst_verstuurd_control_setpoint`. Beide geheugenhelpers bewaren hun waarde na herstart.
 
 De OTGW-voeding wordt bovendien ieder uur 59 seconden uit- en daarna weer ingeschakeld door de afzonderlijke Home Assistant-automatisering **Herstart OTGW**. Deze automatisering staat bewust buiten het verwarmingspackage, omdat ze losstaat van de CV-regeling.
 

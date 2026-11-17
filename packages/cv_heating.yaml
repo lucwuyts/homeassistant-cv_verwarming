@@ -64,6 +64,20 @@ input_number:
     mode: slider
     icon: mdi:thermometer-chevron-up
     unit_of_measurement: °C
+  cv_laatst_verstuurd_control_setpoint:
+    name: CV laatst verstuurd ketelsetpoint
+    min: -1
+    max: 70
+    step: 1
+    mode: box
+    unit_of_measurement: °C
+  cv_laatst_verstuurde_buitentemperatuur:
+    name: CV laatst verstuurde buitentemperatuur
+    min: -50
+    max: 60
+    step: 0.1
+    mode: box
+    unit_of_measurement: °C
   cv_ramp_ref_bureel:
     name: CV ramp referentie Bureel
     min: 0
@@ -157,18 +171,29 @@ automation:
   mode: single
 - id: '1613123298154'
   alias: Buiten Temp -> CV
-  description: Iedere minuut
+  description: Verstuur alleen een gewijzigde buitentemperatuur naar de OpenTherm Gateway.
   triggers:
-  - minutes: /1
-    trigger: time_pattern
-  conditions: []
+  - trigger: state
+    entity_id: weather.wuytskes
+    attribute: temperature
+  - trigger: homeassistant
+    event: start
   actions:
-  - action: opentherm_gw.set_outside_temperature
-    metadata: {}
-    data:
-      gateway_id: otgw
-      temperature: '{{ state_attr(''weather.wuytskes'', ''temperature'') | float(0)
-        }}'
+  - variables:
+      outside_temperature: "{{ state_attr('weather.wuytskes', 'temperature') | float(0) | round(1) }}"
+  - if:
+    - condition: template
+      value_template: "{{ is_number(state_attr('weather.wuytskes', 'temperature')) and outside_temperature | float != states('input_number.cv_laatst_verstuurde_buitentemperatuur') | float(-50) }}"
+    then:
+    - action: opentherm_gw.set_outside_temperature
+      data:
+        gateway_id: otgw
+        temperature: "{{ outside_temperature | float }}"
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.cv_laatst_verstuurde_buitentemperatuur
+      data:
+        value: "{{ outside_temperature | float }}"
   mode: single
 - id: '1613558181388'
   alias: Verstuur wijziging Dag Temp naar CV
@@ -540,14 +565,25 @@ automation:
           datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
   - variables:
       control_setpoint: "{% if not (ha_ketelsturing_actief | bool) %}0{% elif boost_active | bool %}{{ boost_setpoint }}{% elif max_delta | float > 0.3 %}{{ [states('input_number.cv_aanvoer_setpoint') | float(0), max_aanvoer | float] | min }}{% else %}0{% endif %}"
-  - action: logbook.log
-    data:
-      name: CV Controller
-      message: "Warmtevraag {{ max_delta | round(2) }} °C, boost {{ boost_active }}, setpoint {{ control_setpoint }} °C."
-  - action: opentherm_gw.set_control_setpoint
-    data:
-      gateway_id: otgw
-      temperature: "{{ control_setpoint | float }}"
+  - variables:
+      control_setpoint_rounded: "{{ control_setpoint | float | round(0) | int }}"
+  - if:
+    - condition: template
+      value_template: "{{ control_setpoint_rounded | int != states('input_number.cv_laatst_verstuurd_control_setpoint') | int(-1) }}"
+    then:
+    - action: opentherm_gw.set_control_setpoint
+      data:
+        gateway_id: otgw
+        temperature: "{{ control_setpoint_rounded | int }}"
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.cv_laatst_verstuurd_control_setpoint
+      data:
+        value: "{{ control_setpoint_rounded | int }}"
+    - action: logbook.log
+      data:
+        name: CV Controller
+        message: "Warmtevraag {{ max_delta | round(2) }} °C, boost {{ boost_active }}, setpoint gewijzigd naar {{ control_setpoint_rounded }} °C."
   mode: single
   max_exceeded: silent
 - id: '1772527831848'

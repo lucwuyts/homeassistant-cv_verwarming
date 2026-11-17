@@ -43,7 +43,7 @@ De actieve ketelregelaar start bij `max_delta > 0,5 °C` en houdt warmtevraag va
 
 ### Noodstand voor gewone thermostaat
 
-De helper `input_boolean.cv_ketelsturing_ha_actief` dient als noodschakelaar. Wanneer deze uit staat, voert `automation.cv_control_setpoint_dynamisch` geen `opentherm_gw.set_control_setpoint` meer uit. Home Assistant schrijft dan iedere 30 seconden setpoint 0 °C om de OpenTherm-override vrij te geven, zodat een gewone noodthermostaat de warmtevraag kan overnemen.
+De helper `input_boolean.cv_ketelsturing_ha_actief` dient als noodschakelaar. Wanneer deze uit staat, voert `automation.cv_control_setpoint_dynamisch` setpoint 0 °C naar de OTGW zodra de laatst verstuurde waarde nog niet 0 °C is. Daarmee wordt de OpenTherm-override vrijgegeven, zodat een gewone noodthermostaat de warmtevraag kan overnemen.
 
 Deze softwarestand vervangt geen fysieke test. Controleer apart of de noodthermostaat elektrisch en OpenTherm-technisch echt rechtstreeks of correct via de gateway kan werken.
 
@@ -64,6 +64,8 @@ Tijdens boost zet `script.cv_boost_zone_parameterized` de kranen van de gebooste
 ### Ieder uur OTGW herstart (los van het CV-package)
 
 De afzonderlijke Home Assistant-automatisering **Herstart OTGW** onderbreekt ieder vol uur de gatewayvoeding 59 seconden. Ze staat in `automations.yaml`, buiten dit CV-package. Tijdens dat venster kunnen OpenTherm-entiteiten tijdelijk niet beschikbaar zijn en kan een regelactie mislukken of pas bij de volgende cyclus effect krijgen.
+
+De CV-regelaar berekent het ketelsetpoint nog iedere 30 seconden, maar schrijft alleen bij een wijziging op hele graden. De buitentemperatuur wordt alleen geschreven bij een verandering van 0,1 °C. De twee `CV laatst verstuurde ...` helpers tonen welke waarden als laatst naar de OTGW zijn gestuurd.
 
 ### Ochtendstart is een bewuste dagschakelaar
 
