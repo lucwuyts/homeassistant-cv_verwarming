@@ -35,7 +35,10 @@ Alle apparaten zijn Tado° Smart Radiator Thermostat X. De macro selecteert op d
 | `input_number.temp_wens_dag` | doeltemperatuur voor een ingeschakelde zone | 15–24 °C, stap 0,5 °C |
 | `input_number.temp_wens_nacht` | doeltemperatuur voor een uitgeschakelde zone | 14–22 °C, stap 0,5 °C |
 | `input_number.cv_laatst_verstuurd_control_setpoint` | laatst naar OTGW geschreven aanvoerwaarde | -1–70 °C, stap 1 °C |
+| `input_number.cv_berekend_control_setpoint` | actuele afgeronde aanvoerwaarde van de regelaar | -1–70 °C, stap 1 °C |
 | `input_number.cv_laatst_verstuurde_buitentemperatuur` | laatst naar OTGW geschreven buitentemperatuur | -50–60 °C, stap 0,1 °C |
+| `input_datetime.cv_laatst_verstuurd_control_setpoint_op` | tijdstip waarop het ketelsetpoint voor het laatst is ingesteld/vernieuwd | datum en tijd |
+| `input_datetime.cv_control_setpoint_regelaar_bijgewerkt_op` | heartbeat van de setpointregelaar; voorkomt keepalive bij een vastgelopen regelaar | datum en tijd |
 | `input_number.nacht_keuken` (“Nacht Keuken”) | afzonderlijke nachttemperatuur voor Keuken en Tussen | 14–20 °C, stap 0,5 °C |
 | Gastenkamer Nacht Temp (UI-helper; niet opgenomen in het package) | voorziene nachttemperatuur voor de gastenkamer | 6–18 °C, stap 0,5 °C |
 | `input_datetime.begin_nacht` | tijdstip waarop alle zones naar nacht gaan | tijdwaarde |

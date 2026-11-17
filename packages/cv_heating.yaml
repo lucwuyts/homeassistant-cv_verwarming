@@ -71,6 +71,13 @@ input_number:
     step: 1
     mode: box
     unit_of_measurement: °C
+  cv_berekend_control_setpoint:
+    name: CV berekend ketelsetpoint
+    min: -1
+    max: 70
+    step: 1
+    mode: box
+    unit_of_measurement: °C
   cv_laatst_verstuurde_buitentemperatuur:
     name: CV laatst verstuurde buitentemperatuur
     min: -50
@@ -135,6 +142,16 @@ input_datetime:
     has_date: true
     has_time: true
     icon: mdi:timer-outline
+  cv_laatst_verstuurd_control_setpoint_op:
+    name: CV ketelsetpoint laatst vernieuwd
+    has_date: true
+    has_time: true
+    icon: mdi:clock-check-outline
+  cv_control_setpoint_regelaar_bijgewerkt_op:
+    name: CV setpointregelaar laatst actief
+    has_date: true
+    has_time: true
+    icon: mdi:heart-pulse
 counter:
   cv_counter:
     name: CV Counter
@@ -567,6 +584,16 @@ automation:
       control_setpoint: "{% if not (ha_ketelsturing_actief | bool) %}0{% elif boost_active | bool %}{{ boost_setpoint }}{% elif max_delta | float > 0.3 %}{{ [states('input_number.cv_aanvoer_setpoint') | float(0), max_aanvoer | float] | min }}{% else %}0{% endif %}"
   - variables:
       control_setpoint_rounded: "{{ control_setpoint | float | round(0) | int }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.cv_berekend_control_setpoint
+    data:
+      value: "{{ control_setpoint_rounded | int }}"
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.cv_control_setpoint_regelaar_bijgewerkt_op
+    data:
+      datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
   - if:
     - condition: template
       value_template: "{{ control_setpoint_rounded | int != states('input_number.cv_laatst_verstuurd_control_setpoint') | int(-1) }}"
@@ -580,12 +607,37 @@ automation:
         entity_id: input_number.cv_laatst_verstuurd_control_setpoint
       data:
         value: "{{ control_setpoint_rounded | int }}"
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.cv_laatst_verstuurd_control_setpoint_op
+      data:
+        datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
     - action: logbook.log
       data:
         name: CV Controller
         message: "Warmtevraag {{ max_delta | round(2) }} °C, boost {{ boost_active }}, setpoint gewijzigd naar {{ control_setpoint_rounded }} °C."
   mode: single
   max_exceeded: silent
+- id: '1773900000002'
+  alias: CV Control Setpoint Keepalive
+  description: Houd een actief OTGW-setpoint in stand zolang de regelaar recent heeft gerekend.
+  triggers:
+  - trigger: time_pattern
+    minutes: /1
+  conditions:
+  - condition: template
+    value_template: "{{ states('input_number.cv_berekend_control_setpoint') | int(-1) >= 8 and states('input_number.cv_berekend_control_setpoint') | int(-1) == states('input_number.cv_laatst_verstuurd_control_setpoint') | int(-1) and as_timestamp(now()) - as_timestamp(states('input_datetime.cv_control_setpoint_regelaar_bijgewerkt_op'), 0) <= 60 }}"
+  actions:
+  - action: opentherm_gw.set_control_setpoint
+    data:
+      gateway_id: otgw
+      temperature: "{{ states('input_number.cv_berekend_control_setpoint') | int }}"
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.cv_laatst_verstuurd_control_setpoint_op
+    data:
+      datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+  mode: single
 - id: '1772527831848'
   alias: (TEST) Alle CV kranen open
   description: Zet alle slimme radiatorkranen volledig open voor onderhoud

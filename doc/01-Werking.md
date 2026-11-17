@@ -65,7 +65,7 @@ De actieve automatisering `automation.cv_control_setpoint_dynamisch` controleert
 | Na vijf minuten geen kamerrespons van minstens 0,2 °C | Aanvoer met 2 °C verhogen, tot de limiet die past bij de warmtevraag |
 | Kamerrespons van minstens 0,2 °C | Aanvoer vasthouden en een nieuwe meetperiode starten |
 
-De maximale aanvoer is 36 °C bij een delta tot en met 0,75 °C, 42 °C tot en met 1,25 °C, 50 °C tot en met 2 °C en 60 °C bij grotere warmtevraag. Als de vraag afneemt, verlaagt de regelaar de limiet direct. De kamerrespons wordt alleen gemeten voor zones die nog warmtevraag hebben. Elke 30 seconden wordt het actuele OpenTherm-setpoint opnieuw geschreven; dit voorkomt dat de OTGW-aanvraag verloopt. Bij einde warmtevraag wordt de override met setpoint 0 °C vrijgegeven.
+De maximale aanvoer is 36 °C bij een delta tot en met 0,75 °C, 42 °C tot en met 1,25 °C, 50 °C tot en met 2 °C en 60 °C bij grotere warmtevraag. Als de vraag afneemt, verlaagt de regelaar de limiet direct. De kamerrespons wordt alleen gemeten voor zones die nog warmtevraag hebben. Een actief OpenTherm-setpoint wordt periodiek vernieuwd om te voorkomen dat de OTGW-override verloopt. Bij einde warmtevraag wordt de override met setpoint 0 °C vrijgegeven.
 
 ## 4. Radiatorkranen
 
@@ -81,7 +81,7 @@ Een kraansetpoint-wijziging kleiner dan 0,2 °C wordt niet verstuurd.
 
 `automation.buiten_temp_cv` stuurt de temperatuur uit `weather.wuytskes` naar de OpenTherm Gateway wanneer de waarde op 0,1 °C is veranderd. De laatst verstuurde waarde wordt bewaard in `input_number.cv_laatst_verstuurde_buitentemperatuur`; een ontbrekende of ongeldige bron wordt niet verzonden.
 
-De dynamische ketelregelaar blijft iedere 30 seconden de warmtevraag berekenen, maar rondt het `set_control_setpoint` af op hele graden en verstuurt alleen wanneer dat afgeronde setpoint afwijkt van `input_number.cv_laatst_verstuurd_control_setpoint`. Beide geheugenhelpers bewaren hun waarde na herstart.
+De dynamische ketelregelaar blijft iedere 30 seconden de warmtevraag berekenen en rondt het `set_control_setpoint` af op hele graden. Een gewijzigd setpoint wordt direct verstuurd. Een aparte keepalive-automatisering herhaalt een actief setpoint vanaf 8 °C iedere minuut, zolang de regelaar in de afgelopen minuut nog actief was en dezelfde waarde berekend heeft. Setpoint 0 wordt alleen bij een wijziging verstuurd. De actuele en laatst verstuurde waarden staan in `input_number.cv_berekend_control_setpoint` en `input_number.cv_laatst_verstuurd_control_setpoint`.
 
 De OTGW-voeding wordt bovendien ieder uur 59 seconden uit- en daarna weer ingeschakeld door de afzonderlijke Home Assistant-automatisering **Herstart OTGW**. Deze automatisering staat bewust buiten het verwarmingspackage, omdat ze losstaat van de CV-regeling.
 

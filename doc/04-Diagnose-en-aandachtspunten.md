@@ -65,7 +65,7 @@ Tijdens boost zet `script.cv_boost_zone_parameterized` de kranen van de gebooste
 
 De afzonderlijke Home Assistant-automatisering **Herstart OTGW** onderbreekt ieder vol uur de gatewayvoeding 59 seconden. Ze staat in `automations.yaml`, buiten dit CV-package. Tijdens dat venster kunnen OpenTherm-entiteiten tijdelijk niet beschikbaar zijn en kan een regelactie mislukken of pas bij de volgende cyclus effect krijgen.
 
-De CV-regelaar berekent het ketelsetpoint nog iedere 30 seconden, maar schrijft alleen bij een wijziging op hele graden. De buitentemperatuur wordt alleen geschreven bij een verandering van 0,1 °C. De twee `CV laatst verstuurde ...` helpers tonen welke waarden als laatst naar de OTGW zijn gestuurd.
+De CV-regelaar berekent het ketelsetpoint iedere 30 seconden en schrijft wijzigingen op hele graden direct. Een aparte keepalive herhaalt een actief setpoint vanaf 8 °C iedere minuut, maar alleen als de regelaar recent nog hetzelfde setpoint berekende. De buitentemperatuur wordt alleen geschreven bij een verandering van 0,1 °C.
 
 ### Ochtendstart is een bewuste dagschakelaar
 
