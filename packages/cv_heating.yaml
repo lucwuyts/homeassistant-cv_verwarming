@@ -921,19 +921,21 @@ script:
 
               '
             berekend_setpoint: "{% if boost_active or delta > 2 %}\n  30\n{% elif huidig_setpoint >= 29.9 and delta > 1.5 %}\n  30\n{% elif delta > 0 %}\n  {{ [basis + (delta * 3), 30] | min | round(1) }}\n{% else %}\n  {{ basis }}\n{% endif %}\n"
-            new_setpoint: "{% if (berekend_setpoint - huidig_setpoint) | abs < 0.2
-              %}\n  {{ huidig_setpoint }}\n{% else %}\n  {{ berekend_setpoint }}\n\
-              {% endif %}\n"
+            new_setpoint: "{% set gewenst = berekend_setpoint | float %}\n{% set huidig = huidig_setpoint | float %}\n{% if gewenst < huidig %}\n  {% set beperkt = [gewenst, huidig - 0.5] | max %}\n{% else %}\n  {% set beperkt = gewenst %}\n{% endif %}\n{% if (beperkt - huidig) | abs < 0.2 %}\n  {{ huidig }}\n{% else %}\n  {{ beperkt | round(1) }}\n{% endif %}"
         - target:
             entity_id: input_number.debug_setpoint_{{zone | lower }}
           data:
             value: '{{ new_setpoint }}'
           action: input_number.set_value
-        - target:
-            entity_id: '{{ rt_entity }}'
-          data:
-            temperature: '{{ new_setpoint }}'
-          action: climate.set_temperature
+        - if:
+          - condition: template
+            value_template: "{{ (new_setpoint | float - huidig_setpoint | float) | abs >= 0.2 }}"
+          then:
+          - target:
+              entity_id: '{{ rt_entity }}'
+            data:
+              temperature: '{{ new_setpoint }}'
+            action: climate.set_temperature
   cv_boost_zone_slim:
     alias: CV boost zone (slim)
     mode: restart
